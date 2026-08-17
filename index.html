@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MB360 · Auditoría de Campo · Base Central</title>
+<title>MB360 · Centro de Operaciones</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -141,6 +141,41 @@ textarea{min-height:76px;resize:vertical}
 .auth-user{font-size:11px;color:#9AA4B5;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:155px}
 .auth-logout{background:transparent;border:0;color:#9AA4B5;font-size:11px;text-decoration:underline;cursor:pointer;padding:2px 0 2px 8px}
 
+/* ---------- Panel MB360 ---------- */
+.appnav{display:flex;gap:7px;overflow-x:auto;margin-top:11px;padding-bottom:2px;scrollbar-width:none}
+.appnav::-webkit-scrollbar{display:none}
+.appnav button{flex:0 0 auto;border:1px solid #2A3648;background:transparent;color:#B5BECC;border-radius:9px;padding:8px 11px;font:700 12px 'Archivo',sans-serif;cursor:pointer}
+.appnav button.active{background:#2559D6;border-color:#2559D6;color:#fff}
+body.workspace{padding-bottom:48px}
+body.workspace main{max-width:1080px;padding:24px 18px}
+body.workspace #ticker,body.workspace #chips{display:none}
+.workspace-hero{background:linear-gradient(135deg,#0C1524 0%,#173B85 68%,#0B48D0 100%);color:#fff;border-radius:20px;padding:26px;margin-bottom:18px;position:relative;overflow:hidden}
+.workspace-hero:after{content:'';position:absolute;width:190px;height:190px;border:40px solid rgba(255,255,255,.06);border-radius:50%;right:-65px;top:-80px}
+.workspace-hero .eyebrow{color:#8EABFF}.workspace-hero h1{font-size:30px;margin-bottom:8px}.workspace-hero p{color:#D5DDED;max-width:630px;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px}.stat b{display:block;font:800 25px 'Archivo',sans-serif}.stat span{font-size:12px;color:var(--muted)}
+.tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tool-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;text-align:left;cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s;min-height:174px;display:flex;flex-direction:column}
+.tool-card:hover{transform:translateY(-2px);border-color:#B8C7EC;box-shadow:0 10px 24px rgba(12,21,36,.07)}
+.tool-icon{font-size:28px;margin-bottom:18px}.tool-card h2{font:800 18px 'Archivo',sans-serif;margin-bottom:6px}.tool-card p{font-size:13px;color:var(--muted);margin-bottom:18px}.tool-link{margin-top:auto;color:var(--primary);font:700 13px 'Archivo',sans-serif}
+.pagebar{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:18px}.pagebar h1{font-size:28px}.pagebar .hint{margin-bottom:0}
+.page-actions{display:flex;gap:8px;flex-wrap:wrap}.page-actions .btn{flex:0 0 auto;padding:11px 15px;min-height:42px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.form-grid .wide{grid-column:1/-1}
+.form-grid input,.form-grid textarea,.form-grid select,.toolbar select{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:10px;background:#FAFBFC;font:inherit;color:var(--ink)}
+.form-grid textarea{min-height:92px}.form-grid select:focus,.toolbar select:focus{outline:none;border-color:var(--primary);background:#fff}
+.field-label{display:block;font-weight:700;font-size:13px;margin-bottom:7px}.field-label small{display:block;font-weight:400;color:var(--muted);margin-top:2px}
+.section-title{font:800 17px 'Archivo',sans-serif;margin-bottom:12px}
+.toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:12px}.toolbar>div{min-width:210px;flex:1}.toolbar .btn{flex:0 0 auto;min-height:46px;padding:12px 16px}
+.record-list{display:grid;gap:9px}.record{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.record:last-child{border-bottom:0}
+.record-main{min-width:0}.record-title{font-weight:700;font-size:14px}.record-meta{font-size:12px;color:var(--muted);margin-top:3px}.record-note{font-size:13px;margin-top:5px;color:#374151}
+.record-actions{display:flex;gap:7px;flex:0 0 auto}.mini-btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;font-weight:700;font-size:12px;cursor:pointer}.mini-btn.ok{color:var(--ok);border-color:#A6D7C3}
+.badge{display:inline-flex;align-items:center;border-radius:99px;padding:4px 8px;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.04em;background:var(--primary-soft);color:var(--primary)}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}.badge.warn{background:var(--warn-soft);color:#8A5200}.badge.gray{background:#EEF1F4;color:#5B6472}
+.empty{padding:22px;text-align:center;color:var(--muted);font-size:13px}.loading{opacity:.65}
+.shot-draft{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:#F7F9FC;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}.shot-draft small{display:block;color:var(--muted)}
+.notice{border-left:4px solid var(--primary);background:var(--primary-soft);padding:11px 13px;border-radius:8px;font-size:13px;margin-bottom:14px}
+@media(max-width:760px){.stats{grid-template-columns:1fr 1fr}.tool-grid{grid-template-columns:1fr}.tool-card{min-height:145px}.form-grid{grid-template-columns:1fr}.form-grid .wide{grid-column:auto}.pagebar{align-items:flex-start;flex-direction:column}.workspace-hero{padding:22px}.workspace-hero h1{font-size:26px}.brand small{display:none}.appnav button{padding:7px 9px}}
+
 </style>
 </head>
 <body>
@@ -148,7 +183,7 @@ textarea{min-height:76px;resize:vertical}
 <div class="auth-gate" id="authGate">
   <div class="auth-box">
     <div class="auth-logo">MARKET<span>BOOST</span>360</div>
-    <div class="auth-sub">Acceso interno · Auditoría de Campo</div>
+    <div class="auth-sub">Acceso interno · Centro de Operaciones MB360</div>
     <input id="authEmail" type="email" autocomplete="email" placeholder="Email">
     <input id="authPassword" type="password" autocomplete="current-password" placeholder="Contraseña">
     <div class="auth-actions">
@@ -162,9 +197,10 @@ textarea{min-height:76px;resize:vertical}
 
 <header>
   <div style="display:flex;align-items:center;gap:8px">
-  <div class="brand"><b>MARKET<span>BOOST</span>360</b><small>Auditoría de campo</small></div>
+  <div class="brand"><b>MARKET<span>BOOST</span>360</b><small id="appSubtitle">Centro de operaciones</small></div>
   <div class="auth-user" id="authUser"></div><button class="auth-logout" id="logoutBtn" onclick="logoutMB360()" style="display:none">Salir</button>
 </div>
+  <nav class="appnav" id="appnav" aria-label="Herramientas MB360"></nav>
   <div class="chips" id="chips"></div>
 </header>
 
@@ -191,6 +227,18 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
 let currentClientId = null;
 let currentLocationId = null;
 let currentAuditId = null;
+let currentTool = 'home';
+let clientCache = [];
+let productionDraft = [];
+const APP_TOOLS = [
+  {id:'home',label:'Inicio',icon:'⌂',subtitle:'Centro de operaciones'},
+  {id:'audit',label:'Auditoría',icon:'🔎',subtitle:'Auditoría de campo'},
+  {id:'onboarding',label:'Inicio de cliente',icon:'🤝',subtitle:'Inicio de cliente'},
+  {id:'production',label:'Producción',icon:'🎬',subtitle:'Producción de contenido'},
+  {id:'tasks',label:'Tareas',icon:'✓',subtitle:'Tareas y seguimiento'},
+  {id:'metrics',label:'Resultados',icon:'↗',subtitle:'Métricas y resultados'},
+  {id:'reports',label:'Reportes',icon:'▤',subtitle:'Reportes para clientes'}
+];
 
 function authMessage(msg, bad=false){
   const el=document.getElementById('authMsg'); if(!el) return;
@@ -208,6 +256,7 @@ async function checkAuthorization(session){
     return false;
   }
   document.getElementById('authGate').classList.add('hidden');
+  openTool(currentTool,true);
   return true;
 }
 async function initAuth(){
@@ -234,7 +283,7 @@ async function signupMB360(){
   if(!data.session) authMessage('Cuenta creada. Confirma el email y luego vuelve a entrar. Después MB360 debe habilitar tu rol interno.');
   else { await checkAuthorization(data.session); }
 }
-async function logoutMB360(){ await sb.auth.signOut(); currentClientId=currentLocationId=currentAuditId=null; document.getElementById('authGate').classList.remove('hidden'); }
+async function logoutMB360(){ await sb.auth.signOut(); currentClientId=currentLocationId=currentAuditId=null; clientCache=[]; currentTool='home'; document.getElementById('authGate').classList.remove('hidden'); }
 
 function mapBusinessType(v){ return v==='Bar'?'bar':v==='Café'?'cafe':'restaurant'; }
 async function ensureCentralRecords(){
@@ -462,8 +511,16 @@ function sectionAlerts(s){
 }
 
 function render(){
-  renderChips();
   const m = document.getElementById('main');
+  renderAppNav();
+  if(currentTool!=='audit'){
+    document.body.classList.add('workspace');
+    renderWorkspaceTool(m);
+    window.scrollTo({top:0});
+    return;
+  }
+  document.body.classList.remove('workspace');
+  renderChips();
   if(cur === -1){ renderSaved(m); updateTicker(); window.scrollTo({top:0}); return; }
   if(cur < SECTIONS.length){
     const s = SECTIONS[cur];
@@ -708,11 +765,302 @@ function newCentralAudit(){
   Object.keys(D).forEach(k=>delete D[k]); currentClientId=currentLocationId=currentAuditId=null; cur=0; render();
 }
 
+/* ================= CENTRO DE OPERACIONES ================= */
+function esc(v){
+  return String(v??'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+function lines(v){ return String(v||'').split(/\n|,/).map(x=>x.trim()).filter(Boolean); }
+function dateLabel(v){
+  if(!v) return 'Sin fecha';
+  const d=new Date(String(v).length===10?v+'T12:00:00':v);
+  return isNaN(d)?esc(v):d.toLocaleDateString('es-US',{day:'numeric',month:'short',year:'numeric'});
+}
+function renderAppNav(){
+  const nav=document.getElementById('appnav');
+  if(!nav) return;
+  nav.innerHTML=APP_TOOLS.map(t=>`<button class="${currentTool===t.id?'active':''}" onclick="openTool('${t.id}')">${t.icon} ${t.label}</button>`).join('');
+  const active=nav.querySelector('.active'); if(active) active.scrollIntoView({inline:'center',block:'nearest'});
+}
+function openTool(id,quiet=false){
+  if(!APP_TOOLS.some(t=>t.id===id)) id='home';
+  if(currentTool==='audit' && id!=='audit' && D['nombre']) saveAudit(true);
+  currentTool=id;
+  document.body.classList.remove('clientmode');
+  const tool=APP_TOOLS.find(t=>t.id===id);
+  document.getElementById('appSubtitle').textContent=tool?.subtitle||'Centro de operaciones';
+  render();
+  if(!quiet) window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderWorkspaceTool(m){
+  const views={home:renderDashboard,onboarding:renderOnboarding,production:renderProduction,tasks:renderTasks,metrics:renderMetrics,reports:renderReports};
+  (views[currentTool]||renderDashboard)(m);
+}
+function pageHead(eyebrow,title,hint,action=''){
+  return `<div class="pagebar"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="hint">${hint}</p></div>${action?`<div class="page-actions">${action}</div>`:''}</div>`;
+}
+function workspaceError(m,e){
+  console.error(e);
+  m.innerHTML=pageHead('Base Central','No se pudo cargar','Tu cuenta debe tener autorización MB360.')+`<div class="alert warn">⚠️ <span>${esc(e?.message||'Error de conexión con la Base Central.')}</span></div><button class="btn ghost" onclick="openTool('home')">← Volver al inicio</button>`;
+}
+async function loadClients(force=false){
+  if(clientCache.length&&!force) return clientCache;
+  const {data,error}=await sb.from('clients').select('id,business_name,business_type,status,locations(id,address,is_primary)').order('business_name');
+  if(error) throw error;
+  clientCache=data||[];
+  return clientCache;
+}
+function clientOptions(selected=''){
+  return `<option value="">Selecciona un cliente</option>`+clientCache.map(c=>`<option value="${c.id}" ${c.id===selected?'selected':''}>${esc(c.business_name)}</option>`).join('');
+}
+function clientPicker(prefix,allowNew=false){
+  return `<div class="card"><div class="section-title">Cliente</div><div class="form-grid">
+    <div class="${allowNew?'':'wide'}"><label class="field-label" for="${prefix}Client">Cliente existente</label><select id="${prefix}Client">${clientOptions()}</select></div>
+    ${allowNew?`<div><label class="field-label" for="${prefix}NewName">O crea uno nuevo</label><input id="${prefix}NewName" type="text" placeholder="Nombre del negocio"></div>
+    <div><label class="field-label" for="${prefix}Type">Tipo de negocio</label><select id="${prefix}Type"><option value="restaurant">Restaurante</option><option value="bar">Bar</option><option value="cafe">Café</option></select></div>
+    <div><label class="field-label" for="${prefix}Address">Dirección principal</label><input id="${prefix}Address" type="text" placeholder="Dirección"></div>`:''}
+  </div>${allowNew?'<p class="hint" style="margin:10px 0 0">Si eliges un cliente existente, los campos de nuevo negocio se ignoran.</p>':''}</div>`;
+}
+async function resolveToolClient(prefix,allowCreate=false){
+  const selected=document.getElementById(prefix+'Client')?.value;
+  if(selected){
+    const c=clientCache.find(x=>x.id===selected);
+    const loc=(c?.locations||[]).find(x=>x.is_primary)||(c?.locations||[])[0];
+    return {clientId:selected,locationId:loc?.id||null,name:c?.business_name||'Cliente'};
+  }
+  if(!allowCreate) throw new Error('Selecciona un cliente primero.');
+  const name=document.getElementById(prefix+'NewName')?.value.trim();
+  if(!name) throw new Error('Selecciona un cliente o escribe el nombre del nuevo negocio.');
+  const type=document.getElementById(prefix+'Type')?.value||'restaurant';
+  const {data:client,error}=await sb.from('clients').insert({business_name:name,business_type:type,status:'onboarding',start_date:new Date().toISOString().slice(0,10)}).select('id,business_name').single();
+  if(error) throw error;
+  const address=document.getElementById(prefix+'Address')?.value.trim();
+  let locationId=null;
+  if(address){
+    const {data:loc,error:locError}=await sb.from('locations').insert({client_id:client.id,address,is_primary:true}).select('id').single();
+    if(locError) throw locError;
+    locationId=loc.id;
+  }
+  await loadClients(true);
+  return {clientId:client.id,locationId,name:client.business_name};
+}
+
+async function renderDashboard(m){
+  m.innerHTML=`<div class="workspace-hero"><div class="eyebrow">Base Central MB360</div><h1>Todo tu trabajo, en un solo lugar.</h1><p>Abre una herramienta, selecciona el cliente y guarda el avance. Cada área usa la misma base central.</p></div><div class="stats"><div class="stat loading"><b>—</b><span>Clientes</span></div><div class="stat loading"><b>—</b><span>Auditorías</span></div><div class="stat loading"><b>—</b><span>Tareas abiertas</span></div><div class="stat loading"><b>—</b><span>Producciones</span></div></div>`;
+  try{
+    const queries=await Promise.all([
+      sb.from('clients').select('id'),sb.from('audits').select('id'),sb.from('tasks').select('id,status'),sb.from('production_sessions').select('id')
+    ]);
+    const err=queries.find(q=>q.error)?.error; if(err) throw err;
+    const open=(queries[2].data||[]).filter(x=>!['completed','cancelled'].includes(x.status)).length;
+    const stats=[queries[0].data?.length||0,queries[1].data?.length||0,open,queries[3].data?.length||0];
+    m.querySelector('.stats').innerHTML=[['Clientes',stats[0]],['Auditorías',stats[1]],['Tareas abiertas',stats[2]],['Producciones',stats[3]]].map(([l,v])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+    m.insertAdjacentHTML('beforeend',`<div class="tool-grid">
+      <button class="tool-card" onclick="openTool('audit')"><div class="tool-icon">🔎</div><h2>Auditoría de campo</h2><p>Detecta fugas de dinero y prepara el diagnóstico comercial.</p><span class="tool-link">Abrir auditoría →</span></button>
+      <button class="tool-card" onclick="openTool('onboarding')"><div class="tool-icon">🤝</div><h2>Inicio de cliente</h2><p>Registra objetivos, oferta, audiencia, accesos y prioridades.</p><span class="tool-link">Abrir inicio →</span></button>
+      <button class="tool-card" onclick="openTool('production')"><div class="tool-icon">🎬</div><h2>Producción de contenido</h2><p>Planifica sesiones y crea la lista de tomas para grabar.</p><span class="tool-link">Abrir producción →</span></button>
+      <button class="tool-card" onclick="openTool('tasks')"><div class="tool-icon">✅</div><h2>Tareas</h2><p>Asigna prioridades, responsables y fechas de entrega.</p><span class="tool-link">Ver tareas →</span></button>
+      <button class="tool-card" onclick="openTool('metrics')"><div class="tool-icon">📈</div><h2>Resultados</h2><p>Registra métricas y construye el historial de rendimiento.</p><span class="tool-link">Ver resultados →</span></button>
+      <button class="tool-card" onclick="openTool('reports')"><div class="tool-icon">📄</div><h2>Reportes</h2><p>Guarda resúmenes ejecutivos, avances y próximos pasos.</p><span class="tool-link">Abrir reportes →</span></button>
+    </div>`);
+  }catch(e){ workspaceError(m,e); }
+}
+
+async function renderOnboarding(m){
+  m.innerHTML=pageHead('Configuración','🤝 Inicio de cliente','Crea la ficha operativa que alimentará el trabajo de MB360.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+'<div class="card loading">Cargando clientes…</div>';
+  try{
+    await loadClients();
+    m.innerHTML=pageHead('Configuración','🤝 Inicio de cliente','Crea la ficha operativa que alimentará el trabajo de MB360.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+
+      clientPicker('onb',true)+`<div class="card"><div class="section-title">Información estratégica</div><div class="form-grid">
+        <div><label class="field-label">Objetivo principal</label><input id="onbGoal" placeholder="Ej: aumentar pedidos directos"></div>
+        <div><label class="field-label">Oferta principal</label><input id="onbOffer" placeholder="Productos o servicios a impulsar"></div>
+        <div><label class="field-label">Cliente ideal</label><input id="onbAudience" placeholder="Quién compra y por qué"></div>
+        <div><label class="field-label">Diferencial</label><input id="onbDifference" placeholder="Por qué deberían elegirlo"></div>
+        <div><label class="field-label">Personalidad de marca</label><input id="onbVoice" placeholder="Ej: cercana, familiar y energética"></div>
+        <div><label class="field-label">Canales actuales</label><input id="onbPlatforms" placeholder="Instagram, Google, WhatsApp…"></div>
+        <div class="wide"><label class="field-label">Situación actual</label><textarea id="onbSituation" placeholder="Qué funciona, qué no y qué espera el cliente"></textarea></div>
+        <div><label class="field-label">Prioridades iniciales<small>Una por línea</small></label><textarea id="onbPriorities"></textarea></div>
+        <div><label class="field-label">Información o accesos pendientes<small>Uno por línea</small></label><textarea id="onbMissing"></textarea></div>
+        <div class="wide"><label class="field-label">Preguntas para investigar<small>Una por línea</small></label><textarea id="onbResearch"></textarea></div>
+      </div><div class="navbtns"><button class="btn primary" onclick="saveOnboarding()">Guardar inicio de cliente</button></div></div>
+      <div id="onboardingList"><div class="card loading">Cargando inicios guardados…</div></div>`;
+    refreshOnboardings();
+  }catch(e){ workspaceError(m,e); }
+}
+async function saveOnboarding(){
+  try{
+    const c=await resolveToolClient('onb',true);
+    const answers={business_goal:document.getElementById('onbGoal').value.trim(),primary_offer:document.getElementById('onbOffer').value.trim(),ideal_customer:document.getElementById('onbAudience').value.trim(),differential:document.getElementById('onbDifference').value.trim(),brand_voice:document.getElementById('onbVoice').value.trim(),platforms:document.getElementById('onbPlatforms').value.trim(),current_situation:document.getElementById('onbSituation').value.trim()};
+    const priorities=lines(document.getElementById('onbPriorities').value),missing=lines(document.getElementById('onbMissing').value),research=lines(document.getElementById('onbResearch').value);
+    const summary=`${c.name}: ${answers.business_goal||'inicio operativo'}${priorities.length?'. Prioridad: '+priorities[0]:''}`;
+    const {error}=await sb.from('onboardings').insert({client_id:c.clientId,location_id:c.locationId,form_version:'1.0-panel',raw_answers:answers,summary,missing_information:missing,preliminary_priorities:priorities,research_brief:research,status:'completed'});
+    if(error) throw error;
+    await sb.from('clients').update({status:'onboarding'}).eq('id',c.clientId).eq('status','prospect');
+    toast('Inicio de cliente guardado ✓');
+    renderOnboarding(document.getElementById('main'));
+  }catch(e){ console.error(e); toast('Error: '+(e.message||'no se pudo guardar')); }
+}
+async function refreshOnboardings(){
+  const host=document.getElementById('onboardingList'); if(!host) return;
+  const {data,error}=await sb.from('onboardings').select('id,onboarding_date,status,summary,clients(business_name)').order('onboarding_date',{ascending:false}).limit(30);
+  if(error){host.innerHTML=`<div class="alert warn">⚠️ ${esc(error.message)}</div>`;return;}
+  host.innerHTML=`<div class="card"><div class="section-title">Inicios guardados</div><div class="record-list">${data?.length?data.map(x=>`<div class="record"><div class="record-main"><div class="record-title">${esc(x.clients?.business_name||'Cliente')}</div><div class="record-meta">${dateLabel(x.onboarding_date)} · <span class="badge ok">${esc(x.status)}</span></div><div class="record-note">${esc(x.summary||'Sin resumen')}</div></div></div>`).join(''):'<div class="empty">Todavía no hay inicios de cliente.</div>'}</div></div>`;
+}
+
+async function renderProduction(m){
+  m.innerHTML=pageHead('Operación','🎬 Producción de contenido','Planifica la sesión y arma la lista exacta de tomas.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+'<div class="card loading">Cargando…</div>';
+  try{
+    await loadClients();
+    if(!clientCache.length){m.innerHTML=pageHead('Operación','🎬 Producción de contenido','Primero necesitas crear un cliente.')+`<div class="notice">Crea el cliente desde Inicio de cliente y luego vuelve aquí.</div><button class="btn primary" onclick="openTool('onboarding')">Crear cliente →</button>`;return;}
+    m.innerHTML=pageHead('Operación','🎬 Producción de contenido','Planifica la sesión y arma la lista exacta de tomas.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+
+      clientPicker('prod')+`<div class="card"><div class="section-title">Datos de la sesión</div><div class="form-grid">
+        <div><label class="field-label">Fecha y hora</label><input id="prodDate" type="datetime-local"></div><div><label class="field-label">Objetivo de producción</label><input id="prodGoal" placeholder="Ej: 8 reels para el mes"></div>
+        <div class="wide"><label class="field-label">Notas de la sesión</label><textarea id="prodNotes" placeholder="Locación, equipo, productos y responsables"></textarea></div>
+      </div></div>
+      <div class="card"><div class="section-title">Lista de tomas</div><div class="form-grid">
+        <div><label class="field-label">Tipo de toma</label><select id="shotType"><option>Producto</option><option>Ambiente</option><option>Proceso</option><option>Testimonio</option><option>Promoción</option><option>Equipo</option></select></div>
+        <div><label class="field-label">Formato</label><select id="shotOrientation"><option value="9:16">Vertical 9:16</option><option value="4:5">Feed 4:5</option><option value="1:1">Cuadrado 1:1</option><option value="16:9">Horizontal 16:9</option></select></div>
+        <div class="wide"><label class="field-label">Descripción de la toma</label><input id="shotDescription" placeholder="Ej: close-up del plato saliendo de cocina"></div>
+        <div><label class="field-label">Uso previsto</label><input id="shotUse" placeholder="Reel, story, anuncio…"></div><div><label class="field-label">Prioridad</label><select id="shotPriority"><option value="high">Alta</option><option value="medium" selected>Media</option><option value="low">Baja</option></select></div>
+      </div><div class="navbtns"><button class="btn ghost" onclick="addProductionShot()">+ Agregar toma</button></div><div id="productionDraft"></div></div>
+      <div class="navbtns"><button class="btn primary" onclick="saveProductionSession()">Guardar sesión completa</button></div>
+      <div id="productionList"><div class="card loading">Cargando sesiones…</div></div>`;
+    renderProductionDraft(); refreshProductions();
+  }catch(e){ workspaceError(m,e); }
+}
+function addProductionShot(){
+  const description=document.getElementById('shotDescription').value.trim();
+  if(!description) return toast('Describe la toma primero');
+  productionDraft.push({shot_type:document.getElementById('shotType').value,description,orientation:document.getElementById('shotOrientation').value,planned_use:document.getElementById('shotUse').value.trim()||null,priority:document.getElementById('shotPriority').value});
+  document.getElementById('shotDescription').value=''; document.getElementById('shotUse').value=''; renderProductionDraft();
+}
+function removeProductionShot(i){ productionDraft.splice(i,1); renderProductionDraft(); }
+function renderProductionDraft(){
+  const host=document.getElementById('productionDraft'); if(!host) return;
+  host.innerHTML=productionDraft.length?productionDraft.map((s,i)=>`<div class="shot-draft"><div><b>${esc(s.shot_type)} · ${esc(s.orientation)}</b><small>${esc(s.description)}${s.planned_use?' · '+esc(s.planned_use):''}</small></div><button class="mini-btn" onclick="removeProductionShot(${i})">Quitar</button></div>`).join(''):'<div class="empty">Agrega las tomas que no pueden faltar.</div>';
+}
+async function saveProductionSession(){
+  try{
+    const c=await resolveToolClient('prod');
+    const goal=document.getElementById('prodGoal').value.trim();
+    if(!goal) throw new Error('Escribe el objetivo de la producción.');
+    const scheduled=document.getElementById('prodDate').value;
+    const {data:session,error}=await sb.from('production_sessions').insert({client_id:c.clientId,location_id:c.locationId,scheduled_date:scheduled?new Date(scheduled).toISOString():null,production_goal:goal,notes:document.getElementById('prodNotes').value.trim()||null,status:'planned'}).select('id').single();
+    if(error) throw error;
+    if(productionDraft.length){
+      const {error:shotsError}=await sb.from('production_shots').insert(productionDraft.map(x=>({...x,production_session_id:session.id})));
+      if(shotsError) throw shotsError;
+    }
+    productionDraft=[]; toast('Sesión de producción guardada ✓'); renderProduction(document.getElementById('main'));
+  }catch(e){ console.error(e); toast('Error: '+(e.message||'no se pudo guardar')); }
+}
+async function refreshProductions(){
+  const host=document.getElementById('productionList'); if(!host) return;
+  const {data,error}=await sb.from('production_sessions').select('id,scheduled_date,production_goal,status,clients(business_name),production_shots(id,completed)').order('scheduled_date',{ascending:false,nullsFirst:false}).limit(30);
+  if(error){host.innerHTML=`<div class="alert warn">⚠️ ${esc(error.message)}</div>`;return;}
+  host.innerHTML=`<div class="card"><div class="section-title">Sesiones programadas</div>${data?.length?data.map(x=>{const shots=x.production_shots||[],done=shots.filter(s=>s.completed).length;return `<div class="record"><div class="record-main"><div class="record-title">${esc(x.clients?.business_name||'Cliente')} · ${esc(x.production_goal||'Producción')}</div><div class="record-meta">${dateLabel(x.scheduled_date)} · ${done}/${shots.length} tomas · <span class="badge ${x.status==='completed'?'ok':'warn'}">${esc(x.status)}</span></div></div></div>`}).join(''):'<div class="empty">Todavía no hay sesiones programadas.</div>'}</div>`;
+}
+
+async function renderTasks(m){
+  m.innerHTML=pageHead('Seguimiento','✅ Tareas','Prioriza el trabajo y marca lo que ya se completó.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+'<div class="card loading">Cargando…</div>';
+  try{
+    await loadClients();
+    if(!clientCache.length){m.innerHTML=pageHead('Seguimiento','✅ Tareas','Primero necesitas crear un cliente.')+`<button class="btn primary" onclick="openTool('onboarding')">Crear cliente →</button>`;return;}
+    m.innerHTML=pageHead('Seguimiento','✅ Tareas','Prioriza el trabajo y marca lo que ya se completó.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+
+      clientPicker('task')+`<div class="card"><div class="section-title">Nueva tarea</div><div class="form-grid">
+        <div class="wide"><label class="field-label">Título</label><input id="taskTitle" placeholder="Qué hay que hacer"></div>
+        <div class="wide"><label class="field-label">Descripción</label><textarea id="taskDescription"></textarea></div>
+        <div><label class="field-label">Prioridad</label><select id="taskPriority"><option value="critical">Crítica</option><option value="high">Alta</option><option value="medium" selected>Media</option><option value="low">Baja</option></select></div>
+        <div><label class="field-label">Impacto esperado</label><select id="taskImpact"><option value="high">Alto</option><option value="medium">Medio</option><option value="low">Bajo</option><option value="unknown">Por definir</option></select></div>
+        <div><label class="field-label">Responsable</label><input id="taskOwner" placeholder="Nombre o equipo"></div><div><label class="field-label">Fecha límite</label><input id="taskDue" type="date"></div>
+      </div><div class="navbtns"><button class="btn primary" onclick="saveTask()">Crear tarea</button></div></div><div id="taskList"><div class="card loading">Cargando tareas…</div></div>`;
+    refreshTasks();
+  }catch(e){ workspaceError(m,e); }
+}
+async function saveTask(){
+  try{
+    const c=await resolveToolClient('task'); const title=document.getElementById('taskTitle').value.trim(); if(!title) throw new Error('Escribe el título de la tarea.');
+    const {error}=await sb.from('tasks').insert({client_id:c.clientId,title,description:document.getElementById('taskDescription').value.trim()||null,priority:document.getElementById('taskPriority').value,expected_profit_impact:document.getElementById('taskImpact').value,owner:document.getElementById('taskOwner').value.trim()||null,due_date:document.getElementById('taskDue').value||null,status:'pending'});
+    if(error) throw error; toast('Tarea creada ✓'); renderTasks(document.getElementById('main'));
+  }catch(e){console.error(e);toast('Error: '+(e.message||'no se pudo guardar'));}
+}
+async function completeTask(id){
+  const {error}=await sb.from('tasks').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id);
+  if(error) return toast('Error: '+error.message); toast('Tarea completada ✓'); refreshTasks();
+}
+async function refreshTasks(){
+  const host=document.getElementById('taskList'); if(!host) return;
+  const {data,error}=await sb.from('tasks').select('id,title,description,priority,owner,due_date,status,clients(business_name)').order('created_at',{ascending:false}).limit(100);
+  if(error){host.innerHTML=`<div class="alert warn">⚠️ ${esc(error.message)}</div>`;return;}
+  const sorted=(data||[]).sort((a,b)=>(a.status==='completed')-(b.status==='completed'));
+  host.innerHTML=`<div class="card"><div class="section-title">Todas las tareas</div>${sorted.length?sorted.map(x=>`<div class="record"><div class="record-main"><div class="record-title">${esc(x.title)} ${x.status==='completed'?'<span class="badge ok">Completada</span>':`<span class="badge ${x.priority==='critical'?'warn':''}">${esc(x.priority)}</span>`}</div><div class="record-meta">${esc(x.clients?.business_name||'Cliente')} · ${x.owner?'Responsable: '+esc(x.owner)+' · ':''}${dateLabel(x.due_date)}</div>${x.description?`<div class="record-note">${esc(x.description)}</div>`:''}</div>${x.status!=='completed'?`<div class="record-actions"><button class="mini-btn ok" onclick="completeTask('${x.id}')">Completar</button></div>`:''}</div>`).join(''):'<div class="empty">No hay tareas todavía.</div>'}</div>`;
+}
+
+async function renderMetrics(m){
+  m.innerHTML=pageHead('Medición','📈 Resultados','Registra números comparables por cliente y período.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+'<div class="card loading">Cargando…</div>';
+  try{
+    await loadClients();
+    if(!clientCache.length){m.innerHTML=pageHead('Medición','📈 Resultados','Primero necesitas crear un cliente.')+`<button class="btn primary" onclick="openTool('onboarding')">Crear cliente →</button>`;return;}
+    const today=new Date().toISOString().slice(0,10);
+    m.innerHTML=pageHead('Medición','📈 Resultados','Registra números comparables por cliente y período.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+clientPicker('metric')+`<div class="card"><div class="section-title">Nueva medición</div><div class="form-grid">
+      <div><label class="field-label">Métrica</label><select id="metricKey"><option value="sales">Ventas</option><option value="average_ticket">Ticket promedio</option><option value="customers">Clientes</option><option value="direct_orders">Pedidos directos</option><option value="leads">Consultas / leads</option><option value="reviews">Reseñas</option><option value="reach">Alcance</option><option value="followers">Seguidores</option><option value="reservations">Reservas</option></select></div>
+      <div><label class="field-label">Valor</label><input id="metricValue" type="number" step="any" inputmode="decimal"></div>
+      <div><label class="field-label">Fuente</label><input id="metricSource" placeholder="POS, Instagram, Google…"></div><div><label class="field-label">Calidad del dato</label><select id="metricQuality"><option value="verified">Verificado</option><option value="client_reported">Informado por cliente</option><option value="estimated">Estimado</option><option value="incomplete">Incompleto</option></select></div>
+      <div><label class="field-label">Inicio del período</label><input id="metricStart" type="date" value="${today}"></div><div><label class="field-label">Fin del período</label><input id="metricEnd" type="date" value="${today}"></div>
+    </div><div class="navbtns"><button class="btn primary" onclick="saveMetric()">Guardar resultado</button></div></div><div id="metricList"><div class="card loading">Cargando resultados…</div></div>`;
+    refreshMetrics();
+  }catch(e){workspaceError(m,e);}
+}
+async function saveMetric(){
+  try{
+    const c=await resolveToolClient('metric'),value=document.getElementById('metricValue').value;
+    if(value==='') throw new Error('Escribe el valor de la métrica.');
+    const source=document.getElementById('metricSource').value.trim(); if(!source) throw new Error('Indica la fuente del dato.');
+    const start=document.getElementById('metricStart').value,end=document.getElementById('metricEnd').value; if(!start||!end) throw new Error('Completa el período.');
+    const {error}=await sb.from('metrics').insert({client_id:c.clientId,location_id:c.locationId,source,metric_key:document.getElementById('metricKey').value,metric_value:Number(value),period_start:start,period_end:end,data_quality:document.getElementById('metricQuality').value,collection_method:'manual_panel'});
+    if(error) throw error; toast('Resultado guardado ✓'); renderMetrics(document.getElementById('main'));
+  }catch(e){console.error(e);toast('Error: '+(e.message||'no se pudo guardar'));}
+}
+async function refreshMetrics(){
+  const host=document.getElementById('metricList'); if(!host) return;
+  const {data,error}=await sb.from('metrics').select('id,metric_key,metric_value,source,period_start,period_end,data_quality,clients(business_name)').order('period_end',{ascending:false}).limit(100);
+  if(error){host.innerHTML=`<div class="alert warn">⚠️ ${esc(error.message)}</div>`;return;}
+  host.innerHTML=`<div class="card"><div class="section-title">Historial de resultados</div>${data?.length?data.map(x=>`<div class="record"><div class="record-main"><div class="record-title">${esc(x.clients?.business_name||'Cliente')} · ${esc(x.metric_key.replaceAll('_',' '))}</div><div class="record-meta">${dateLabel(x.period_start)}–${dateLabel(x.period_end)} · ${esc(x.source)} · <span class="badge gray">${esc(x.data_quality)}</span></div></div><div class="lv op">${Number(x.metric_value).toLocaleString('en-US')}</div></div>`).join(''):'<div class="empty">Todavía no hay resultados registrados.</div>'}</div>`;
+}
+
+async function renderReports(m){
+  m.innerHTML=pageHead('Comunicación','📄 Reportes','Documenta avances, problemas y próximos pasos para cada cliente.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+'<div class="card loading">Cargando…</div>';
+  try{
+    await loadClients();
+    if(!clientCache.length){m.innerHTML=pageHead('Comunicación','📄 Reportes','Primero necesitas crear un cliente.')+`<button class="btn primary" onclick="openTool('onboarding')">Crear cliente →</button>`;return;}
+    const today=new Date().toISOString().slice(0,10);
+    m.innerHTML=pageHead('Comunicación','📄 Reportes','Documenta avances, problemas y próximos pasos para cada cliente.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+clientPicker('report')+`<div class="card"><div class="section-title">Nuevo reporte</div><div class="form-grid">
+      <div><label class="field-label">Tipo</label><select id="reportType"><option value="weekly_internal">Semanal interno</option><option value="monthly_client">Mensual para cliente</option><option value="quarterly_client">Trimestral para cliente</option><option value="custom">Personalizado</option></select></div><div></div>
+      <div><label class="field-label">Inicio del período</label><input id="reportStart" type="date" value="${today}"></div><div><label class="field-label">Fin del período</label><input id="reportEnd" type="date" value="${today}"></div>
+      <div class="wide"><label class="field-label">Resumen ejecutivo</label><textarea id="reportSummary" placeholder="Qué pasó y qué debe saber el cliente"></textarea></div>
+      <div><label class="field-label">Logros<small>Uno por línea</small></label><textarea id="reportWins"></textarea></div><div><label class="field-label">Problemas<small>Uno por línea</small></label><textarea id="reportProblems"></textarea></div>
+      <div><label class="field-label">Acciones completadas<small>Una por línea</small></label><textarea id="reportActions"></textarea></div><div><label class="field-label">Próximas acciones<small>Una por línea</small></label><textarea id="reportNext"></textarea></div>
+    </div><div class="navbtns"><button class="btn primary" onclick="saveReport()">Guardar reporte</button></div></div><div id="reportList"><div class="card loading">Cargando reportes…</div></div>`;
+    refreshReports();
+  }catch(e){workspaceError(m,e);}
+}
+async function saveReport(){
+  try{
+    const c=await resolveToolClient('report'),start=document.getElementById('reportStart').value,end=document.getElementById('reportEnd').value;
+    if(!start||!end) throw new Error('Completa el período del reporte.');
+    const {error}=await sb.from('reports').insert({client_id:c.clientId,report_type:document.getElementById('reportType').value,period_start:start,period_end:end,executive_summary:document.getElementById('reportSummary').value.trim()||null,wins:lines(document.getElementById('reportWins').value),problems:lines(document.getElementById('reportProblems').value),actions_completed:lines(document.getElementById('reportActions').value),next_actions:lines(document.getElementById('reportNext').value),metrics_summary:{}});
+    if(error) throw error; toast('Reporte guardado ✓'); renderReports(document.getElementById('main'));
+  }catch(e){console.error(e);toast('Error: '+(e.message||'no se pudo guardar'));}
+}
+async function refreshReports(){
+  const host=document.getElementById('reportList'); if(!host) return;
+  const {data,error}=await sb.from('reports').select('id,report_type,period_start,period_end,executive_summary,wins,next_actions,clients(business_name)').order('period_end',{ascending:false}).limit(50);
+  if(error){host.innerHTML=`<div class="alert warn">⚠️ ${esc(error.message)}</div>`;return;}
+  host.innerHTML=`<div class="card"><div class="section-title">Reportes guardados</div>${data?.length?data.map(x=>`<div class="record"><div class="record-main"><div class="record-title">${esc(x.clients?.business_name||'Cliente')} · ${esc(x.report_type.replaceAll('_',' '))}</div><div class="record-meta">${dateLabel(x.period_start)}–${dateLabel(x.period_end)} · ${x.wins?.length||0} logros · ${x.next_actions?.length||0} próximas acciones</div>${x.executive_summary?`<div class="record-note">${esc(x.executive_summary)}</div>`:''}</div></div>`).join(''):'<div class="empty">Todavía no hay reportes.</div>'}</div>`;
+}
+
 initAuth();
 
 render();
 </script>
 </body>
 </html>
-
-
