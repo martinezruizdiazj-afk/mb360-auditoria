@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MB360 · Auditoría de Campo · Base Central</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --ink:#0C1524; --muted:#5B6472; --line:#E3E7EC;
+  --primary:#0B48D0; --primary-soft:#E8EEFC;
+  --leak:#D93036; --leak-soft:#FDECEC;
+  --ok:#147A50; --ok-soft:#E6F4EE;
+  --warn:#C77400; --warn-soft:#FCF1E0;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);
+  font-size:16px;line-height:1.45;padding-bottom:120px;
+}
+/* ---------- Header ---------- */
+header{
+  background:var(--ink);color:#fff;padding:14px 18px 12px;position:sticky;top:0;z-index:30;
+}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand b{font-family:'Archivo',sans-serif;font-weight:800;letter-spacing:-.02em;font-size:17px}
+.brand b span{color:#5B8CFF}
+.brand small{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#9AA4B5}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;
+  padding:6px 11px;border-radius:99px;border:1px solid #2A3648;color:#9AA4B5;background:transparent;cursor:pointer;
+}
+.chip.active{background:#fff;color:var(--ink);border-color:#fff}
+.chip.done{border-color:#3D5AFE;color:#8FA8FF}
+.chip.diag{border-color:var(--leak);color:#FF8A8E}
+.chip.diag.active{background:var(--leak);color:#fff;border-color:var(--leak)}
+/* ---------- Section ---------- */
+main{max-width:560px;margin:0 auto;padding:16px}
+.eyebrow{
+  font-family:'Archivo',sans-serif;font-weight:700;font-size:11px;text-transform:uppercase;
+  letter-spacing:.16em;color:var(--primary);margin-bottom:4px;
+}
+h1{font-family:'Archivo',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin-bottom:4px}
+.hint{font-size:13px;color:var(--muted);margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+label.fl{display:block;font-weight:600;font-size:14px;margin-bottom:8px}
+label.fl small{display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:2px}
+input[type=text],input[type=number],textarea{
+  width:100%;padding:13px 14px;font-size:16px;font-family:inherit;border:1.5px solid var(--line);
+  border-radius:10px;background:#FAFBFC;color:var(--ink);
+}
+input:focus,textarea:focus{outline:none;border-color:var(--primary);background:#fff}
+textarea{min-height:76px;resize:vertical}
+.money{position:relative}
+.money input{padding-left:30px}
+.money::before{content:'$';position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:600}
+.field{margin-bottom:16px}.field:last-child{margin-bottom:0}
+/* pills */
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{
+  padding:11px 16px;border-radius:99px;border:1.5px solid var(--line);background:#FAFBFC;
+  font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;min-height:44px;
+}
+.pill.sel{background:var(--primary);border-color:var(--primary);color:#fff}
+.pill.sel-bad{background:var(--leak);border-color:var(--leak);color:#fff}
+.pill.sel-ok{background:var(--ok);border-color:var(--ok);color:#fff}
+/* alerts */
+.alert{
+  display:flex;gap:10px;align-items:flex-start;border-radius:10px;padding:11px 13px;
+  font-size:13px;font-weight:500;margin-top:12px;
+}
+.alert.leak{background:var(--leak-soft);color:#8E1B1F}
+.alert.warn{background:var(--warn-soft);color:#7A4A00}
+.alert.ok{background:var(--ok-soft);color:#0C5238}
+.alert b{font-weight:700}
+/* nav buttons */
+.navbtns{display:flex;gap:10px;margin-top:18px}
+.btn{
+  flex:1;padding:15px;border-radius:12px;border:none;font-family:'Archivo',sans-serif;
+  font-weight:700;font-size:15px;cursor:pointer;min-height:50px;
+}
+.btn.primary{background:var(--primary);color:#fff}
+.btn.ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+.btn.danger{background:var(--leak);color:#fff}
+/* ---------- sticky leak ticker ---------- */
+#ticker{
+  position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--ink);color:#fff;
+  padding:12px 18px calc(12px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;
+  border-top:3px solid var(--leak);
+}
+#ticker .tl{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#9AA4B5;font-weight:600}
+#ticker .tv{font-family:'Archivo',sans-serif;font-weight:800;font-size:22px;color:#FF6B6F;font-variant-numeric:tabular-nums}
+#ticker .tv.zero{color:#6B7686}
+#ticker button{
+  background:transparent;border:1.5px solid #3D5AFE;color:#8FA8FF;border-radius:99px;
+  padding:8px 14px;font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;cursor:pointer;
+}
+/* ---------- diagnosis ---------- */
+.diag-total{
+  background:var(--ink);color:#fff;border-radius:var(--radius);padding:22px 18px;margin-bottom:12px;text-align:center;
+}
+.diag-total .dl{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:#9AA4B5;font-weight:600}
+.diag-total .dv{font-family:'Archivo',sans-serif;font-weight:800;font-size:44px;letter-spacing:-.02em;color:#FF6B6F;font-variant-numeric:tabular-nums;margin:4px 0}
+.diag-total .dm{font-size:13px;color:#C4CBD6}
+.leakrow{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.leakrow:last-child{border-bottom:none}
+.leakrow .ln{font-size:14px;font-weight:600}
+.leakrow .ln small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.leakrow .lv{font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;color:var(--leak);font-variant-numeric:tabular-nums;white-space:nowrap}
+.leakrow .lv.op{color:var(--warn)}
+.cierre{
+  background:var(--primary-soft);border:1.5px solid var(--primary);border-radius:var(--radius);
+  padding:16px;margin:12px 0;font-size:16px;line-height:1.55;
+}
+.cierre b{color:var(--primary)}
+.flags .fitem{display:flex;gap:8px;font-size:13px;padding:6px 0;color:#7A4A00;font-weight:500}
+.exports{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.exports .btn{font-size:13px;padding:13px 8px}
+.toast{
+  position:fixed;left:50%;bottom:95px;transform:translateX(-50%);background:var(--ink);color:#fff;
+  padding:10px 18px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;z-index:60;pointer-events:none;
+}
+.toast.show{opacity:1}
+.clientmode .internal{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- MB360 Auth Gate ---------- */
+.auth-gate{position:fixed;inset:0;z-index:999;background:#0C1524;display:flex;align-items:center;justify-content:center;padding:22px}
+.auth-gate.hidden{display:none}
+.auth-box{width:min(420px,100%);background:#fff;border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.auth-logo{font-family:'Archivo',sans-serif;font-weight:800;font-size:20px;margin-bottom:2px}
+.auth-logo span{color:#0B48D0}.auth-sub{font-size:13px;color:#5B6472;margin-bottom:18px}
+.auth-box input{width:100%;padding:13px 14px;font:inherit;border:1.5px solid #E3E7EC;border-radius:10px;margin-bottom:10px}
+.auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.auth-msg{font-size:12px;color:#5B6472;margin-top:12px;min-height:18px;line-height:1.4}
+.auth-user{font-size:11px;color:#9AA4B5;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:155px}
+.auth-logout{background:transparent;border:0;color:#9AA4B5;font-size:11px;text-decoration:underline;cursor:pointer;padding:2px 0 2px 8px}
+
+</style>
+</head>
+<body>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-box">
+    <div class="auth-logo">MARKET<span>BOOST</span>360</div>
+    <div class="auth-sub">Acceso interno · Auditoría de Campo</div>
+    <input id="authEmail" type="email" autocomplete="email" placeholder="Email">
+    <input id="authPassword" type="password" autocomplete="current-password" placeholder="Contraseña">
+    <div class="auth-actions">
+      <button class="btn primary" onclick="loginMB360()">Entrar</button>
+      <button class="btn ghost" onclick="signupMB360()">Crear acceso</button>
+    </div>
+    <div class="auth-msg" id="authMsg">Tu sesión queda guardada en este dispositivo.</div>
+  </div>
+</div>
+
+
+<header>
+  <div style="display:flex;align-items:center;gap:8px">
+  <div class="brand"><b>MARKET<span>BOOST</span>360</b><small>Auditoría de campo</small></div>
+  <div class="auth-user" id="authUser"></div><button class="auth-logout" id="logoutBtn" onclick="logoutMB360()" style="display:none">Salir</button>
+</div>
+  <div class="chips" id="chips"></div>
+</header>
+
+<main id="main"></main>
+
+<div id="ticker">
+  <div>
+    <div class="tl">Fuga estimada</div>
+    <div class="tv zero" id="tickerVal">$0/mes</div>
+  </div>
+  <button onclick="goTo(SECTIONS.length)">Ver diagnóstico →</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
+<script>
+/* ================= MB360 CENTRAL ================= */
+const SUPABASE_URL = 'https://fztdnelzhdoewxqpkxja.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_HDXDi8L0Li9riuogd0YfVQ_AEHOCA-D';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+});
+let currentClientId = null;
+let currentLocationId = null;
+let currentAuditId = null;
+
+function authMessage(msg, bad=false){
+  const el=document.getElementById('authMsg'); if(!el) return;
+  el.textContent=msg; el.style.color=bad?'#D93036':'#5B6472';
+}
+async function checkAuthorization(session){
+  const user=session?.user;
+  const role=user?.app_metadata?.mb360_role;
+  if(!user){ document.getElementById('authGate').classList.remove('hidden'); return false; }
+  document.getElementById('authUser').textContent=user.email||'MB360';
+  document.getElementById('logoutBtn').style.display='inline';
+  if(!['admin','operator','viewer'].includes(role)){
+    document.getElementById('authGate').classList.remove('hidden');
+    authMessage('Cuenta válida, pero todavía no tiene autorización MB360.', true);
+    return false;
+  }
+  document.getElementById('authGate').classList.add('hidden');
+  return true;
+}
+async function initAuth(){
+  const {data:{session}}=await sb.auth.getSession();
+  await checkAuthorization(session);
+  sb.auth.onAuthStateChange((_event,session)=>setTimeout(()=>checkAuthorization(session),0));
+}
+async function loginMB360(){
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  if(!email||!password) return authMessage('Completa email y contraseña.',true);
+  authMessage('Ingresando…');
+  const {data,error}=await sb.auth.signInWithPassword({email,password});
+  if(error) return authMessage(error.message,true);
+  await checkAuthorization(data.session);
+}
+async function signupMB360(){
+  const email=document.getElementById('authEmail').value.trim();
+  const password=document.getElementById('authPassword').value;
+  if(!email||password.length<8) return authMessage('Usa un email y una contraseña de al menos 8 caracteres.',true);
+  authMessage('Creando acceso…');
+  const {data,error}=await sb.auth.signUp({email,password});
+  if(error) return authMessage(error.message,true);
+  if(!data.session) authMessage('Cuenta creada. Confirma el email y luego vuelve a entrar. Después MB360 debe habilitar tu rol interno.');
+  else { await checkAuthorization(data.session); }
+}
+async function logoutMB360(){ await sb.auth.signOut(); currentClientId=currentLocationId=currentAuditId=null; document.getElementById('authGate').classList.remove('hidden'); }
+
+function mapBusinessType(v){ return v==='Bar'?'bar':v==='Café'?'cafe':'restaurant'; }
+async function ensureCentralRecords(){
+  const name=(D['nombre']||'').trim();
+  if(!name) throw new Error('Poné el nombre del negocio primero');
+  if(!currentClientId){
+    const {data:found,error:findErr}=await sb.from('clients').select('id,business_name').eq('business_name',name).limit(1);
+    if(findErr) throw findErr;
+    if(found?.length){ currentClientId=found[0].id; }
+    else {
+      const {data:newClient,error}=await sb.from('clients').insert({business_name:name,business_type:mapBusinessType(D['tipo']),status:'prospect'}).select('id').single();
+      if(error) throw error; currentClientId=newClient.id;
+    }
+  }
+  if(!currentLocationId){
+    const {data:locs,error:locErr}=await sb.from('locations').select('id,address').eq('client_id',currentClientId).eq('is_primary',true).limit(1);
+    if(locErr) throw locErr;
+    if(locs?.length){ currentLocationId=locs[0].id; }
+    else {
+      const {data:newLoc,error}=await sb.from('locations').insert({client_id:currentClientId,address:D['ubicacion']||null,is_primary:true}).select('id').single();
+      if(error) throw error; currentLocationId=newLoc.id;
+    }
+  }
+  // Keep public business facts current without touching private contact data.
+  await sb.from('clients').update({business_name:name,business_type:mapBusinessType(D['tipo'])}).eq('id',currentClientId);
+  if(D['ubicacion']) await sb.from('locations').update({address:D['ubicacion']}).eq('id',currentLocationId);
+}
+
+/* ================= DATA MODEL ================= */
+const D = {}; // respuestas
+const YESNO = ['Sí','No'];
+
+const SECTIONS = [
+{n:1, icon:'🏪', t:'Datos del negocio', hint:'Lo básico para abrir la ficha.', f:[
+  {k:'nombre',l:'Nombre del negocio',t:'text'},
+  {k:'ubicacion',l:'Ubicación',t:'text',ph:'Ej: Roosevelt Ave y 82 St, Jackson Heights'},
+  {k:'tipo',l:'Tipo',t:'pill',o:['Bar','Restaurante','Café']},
+  {k:'horarios',l:'Horarios de apertura',t:'text',ph:'Ej: 11am – 10pm'},
+  {k:'dias',l:'Días de operación',t:'text',ph:'Ej: Martes a Domingo'},
+]},
+{n:2, icon:'🚨', t:'Dolor del dueño', hint:'Abrí la conversación acá. Dejalo hablar — sus respuestas te dicen qué secciones profundizar.', f:[
+  {k:'pierdeDinero',l:'¿Dónde cree que pierde dinero?',t:'area'},
+  {k:'estres',l:'¿Qué le genera más estrés en el día a día?',t:'area'},
+  {k:'automatizar',l:'¿Qué le gustaría automatizar o dejar de hacer?',t:'area'},
+]},
+{n:3, icon:'📊', t:'Datos de ventas', hint:'Si no sabe estos números → negocio sin control (anotalo, es parte del diagnóstico).', f:[
+  {k:'ventasDia',l:'Ventas promedio por día',t:'money'},
+  {k:'ticket',l:'Ticket promedio por cliente',t:'money'},
+  {k:'clientesDia',l:'Clientes por día (aprox)',t:'num'},
+  {k:'horariosFuertes',l:'Horarios más fuertes',t:'multi',o:['Desayuno','Almuerzo','Cena']},
+  {k:'topVendidos',l:'Top 3 productos más vendidos',t:'text'},
+  {k:'rentables',l:'Productos más rentables (si lo sabe)',t:'text'},
+]},
+{n:4, icon:'📲', t:'Captación', hint:'Cómo llegan los clientes hoy.', f:[
+  {k:'origen',l:'¿De dónde llegan los clientes?',t:'multi',o:['Google Maps','Instagram','Recomendación','Tráfico en la calle']},
+  {k:'fotosGoogle',l:'Google: ¿fotos actualizadas?',t:'yn'},
+  {k:'respondeResenas',l:'¿Responde reseñas?',t:'yn'},
+  {k:'numResenas',l:'¿Cuántas reseñas tiene?',t:'num'},
+  {k:'publicaIG',l:'Instagram: ¿publica contenido?',t:'yn'},
+  {k:'frecuenciaIG',l:'¿Cada cuánto publica?',t:'text',ph:'Ej: 1 vez por semana'},
+  {k:'tipoContenido',l:'¿Qué tipo de contenido?',t:'text',ph:'Comida / ambiente / promociones'},
+]},
+{n:5, icon:'🛵', t:'Delivery y comisiones', hint:'Acá suele estar la fuga más grande.', f:[
+  {k:'apps',l:'¿Usa apps de delivery?',t:'multi',o:['Uber Eats','DoorDash','Grubhub','Ninguna']},
+  {k:'pctComision',l:'% de comisión que le cobran',t:'num',ph:'Ej: 25'},
+  {k:'comisionMes',l:'Comisiones pagadas al mes (aprox)',t:'money'},
+  {k:'pctVentasApps',l:'% de sus ventas que viene por apps',t:'num'},
+  {k:'canalDirecto',l:'¿Tiene canal de pedidos directo propio?',t:'yn',inv:true},
+]},
+{n:6, icon:'💬', t:'Respuesta al cliente', hint:'Cada mensaje sin responder es un pedido perdido.', f:[
+  {k:'plataformas',l:'Plataformas donde recibe mensajes',t:'multi',o:['WhatsApp','Instagram','Facebook','Otra']},
+  {k:'quienResponde',l:'¿Quién responde los mensajes?',t:'text'},
+  {k:'tiempoRespuesta',l:'Tiempo promedio de respuesta',t:'pill',o:['< 5 min','5–15 min','+15 min'],bad:'+15 min'},
+  {k:'pierdeMensajes',l:'¿Se pierden mensajes?',t:'yn',inv:true},
+  {k:'msgsPerdidosSemana',l:'Mensajes perdidos por semana (aprox)',t:'num',s:'Si no sabe, estimá juntos: ¿cuántos quedan sin responder un día ocupado?'},
+]},
+{n:7, icon:'🧾', t:'Proceso de pedido', hint:'', f:[
+  {k:'comoToma',l:'¿Cómo se toma el pedido?',t:'multi',o:['Chat','Llamada','En persona']},
+  {k:'menuClaro',l:'¿El menú es claro?',t:'yn'},
+  {k:'erroresPedidos',l:'¿Se cometen errores en pedidos?',t:'pill',o:['Frecuente','A veces','Nunca'],bad:'Frecuente'},
+  {k:'tiempoCerrar',l:'¿Cuánto tarda en cerrar un pedido?',t:'pill',o:['Rápido (<3 min)','Medio','Lento'],bad:'Lento'},
+]},
+{n:8, icon:'🍽️', t:'Operación interna', hint:'', f:[
+  {k:'pedidoCocina',l:'¿Cómo llega el pedido a cocina?',t:'pill',o:['Papel','Memoria','Sistema'],bad:'Memoria'},
+  {k:'erroresCajaCocina',l:'¿Errores entre caja y cocina?',t:'yn',inv:true},
+  {k:'tiempoPrep',l:'Tiempo promedio de preparación',t:'text',ph:'Ej: 15 min'},
+]},
+{n:9, icon:'👥', t:'Personal', hint:'Si el dueño está atrapado en la operación → pitch de "empleado digital".', f:[
+  {k:'numEmpleados',l:'¿Cuántos empleados?',t:'num'},
+  {k:'roles',l:'¿Quién hace qué?',t:'text'},
+  {k:'duenoResponde',l:'¿El dueño responde mensajes / toma pedidos él mismo?',t:'yn',inv:true},
+  {k:'horasDueno',l:'Horas al día que el dueño trabaja en el local',t:'num'},
+  {k:'sinDueno',l:'¿Qué pasa cuando el dueño no está?',t:'area'},
+]},
+{n:10, icon:'💳', t:'Cobro', hint:'', f:[
+  {k:'metodos',l:'Métodos de pago',t:'multi',o:['Efectivo','Tarjeta','Online']},
+  {k:'tiempoCobro',l:'¿Se pierde tiempo cobrando?',t:'yn',inv:true},
+  {k:'abandonan',l:'¿Clientes abandonan en esta etapa?',t:'yn',inv:true},
+]},
+{n:11, icon:'📅', t:'Reservas y eventos', hint:'Si aplica al local.', f:[
+  {k:'tomaReservas',l:'¿Toma reservas?',t:'yn'},
+  {k:'comoReservas',l:'¿Cómo?',t:'pill',o:['Teléfono','WhatsApp','Sistema','No toma']},
+  {k:'noShows',l:'¿Tiene no-shows?',t:'pill',o:['Frecuente','A veces','Nunca'],bad:'Frecuente'},
+  {k:'eventos',l:'¿Hace eventos privados / catering?',t:'yn'},
+]},
+{n:12, icon:'🔁', t:'Retención', hint:'La clave oculta: es más barato que un cliente vuelva que captar uno nuevo.', f:[
+  {k:'baseDatos',l:'¿Tiene base de datos de clientes?',t:'yn',inv:true},
+  {k:'seguimiento',l:'¿Hace seguimiento a clientes?',t:'yn',inv:true},
+  {k:'repiten',l:'¿Clientes repiten compra?',t:'pill',o:['Frecuente','Poco','No sabe'],bad:'No sabe'},
+]},
+{n:13, icon:'⏱️', t:'Tiempos críticos', hint:'Medí o estimá en minutos.', f:[
+  {k:'tResponder',l:'Tiempo en responder',t:'text',ph:'min'},
+  {k:'tTomar',l:'Tiempo en tomar pedido',t:'text',ph:'min'},
+  {k:'tPreparar',l:'Tiempo en preparar',t:'text',ph:'min'},
+  {k:'tCobrar',l:'Tiempo en cobrar',t:'text',ph:'min'},
+]},
+{n:14, icon:'💰', t:'Decisión e inversión', hint:'Cerrá la conversación acá — nunca antes de ganar confianza.', f:[
+  {k:'quienDecide',l:'¿Quién toma las decisiones del negocio?',t:'pill',o:['Dueño solo','Familia','Socios']},
+  {k:'invirtioAntes',l:'¿Invirtió antes en marketing o tecnología? ¿Qué pasó?',t:'area'},
+  {k:'gastoPublicidad',l:'Gasto actual en publicidad al mes',t:'money'},
+  {k:'probaria',l:'Si algo le resolviera su problema principal, ¿probaría un mes sin contrato?',t:'yn'},
+]},
+];
+
+let cur = 0; // índice de sección actual (SECTIONS.length = diagnóstico)
+
+/* ================= CÁLCULO DE FUGAS ================= */
+function num(k){ const v = parseFloat(D[k]); return isNaN(v)?0:v; }
+function fmt(v){ return '$'+Math.round(v).toLocaleString('en-US'); }
+
+function calcLeaks(){
+  const leaks = [];
+  // 1. Delivery
+  const comm = num('comisionMes');
+  if(comm>0 && D['canalDirecto']==='No'){
+    leaks.push({id:'delivery', n:'Comisiones de delivery', d:'Recuperable con canal directo (est. 50%)', v:comm*0.5});
+  } else if(comm>0){
+    leaks.push({id:'delivery', n:'Comisiones de delivery', d:'Ya tiene canal directo — optimizable (est. 25%)', v:comm*0.25});
+  }
+  // 2. Mensajes perdidos
+  const msgs = num('msgsPerdidosSemana'), ticket = num('ticket');
+  if(msgs>0 && ticket>0){
+    leaks.push({id:'mensajes', n:'Mensajes sin responder', d:msgs+' msg/sem × 40% conversión × ticket '+fmt(ticket), v:msgs*0.4*ticket*4.3});
+  } else if(D['pierdeMensajes']==='Sí' && ticket>0){
+    leaks.push({id:'mensajes', n:'Mensajes sin responder', d:'Estimación mínima: 5 msg/sem perdidos', v:5*0.4*ticket*4.3});
+  }
+  // 3. Errores de pedidos
+  const vd = num('ventasDia');
+  if(vd>0 && D['erroresPedidos']==='Frecuente'){
+    leaks.push({id:'errores', n:'Errores en pedidos', d:'Est. 5% de ventas (comida + clientes que no vuelven)', v:vd*30*0.05});
+  } else if(vd>0 && D['erroresPedidos']==='A veces'){
+    leaks.push({id:'errores', n:'Errores en pedidos', d:'Est. 2% de ventas', v:vd*30*0.02});
+  }
+  // 4. Retención (oportunidad)
+  if(vd>0 && D['baseDatos']==='No' && D['seguimiento']==='No'){
+    leaks.push({id:'retencion', n:'Retención inexistente', d:'Oportunidad: est. 8% más de ventas con seguimiento', v:vd*30*0.08, op:true});
+  }
+  return leaks;
+}
+
+function calcFlags(){
+  const f = [];
+  if(D['ventasDia']===undefined || D['ventasDia']==='' ){}
+  if((D['nombre']||'')!=='' && !num('ventasDia') && !num('ticket')) f.push('No conoce sus números de venta → negocio sin control. Primero necesita visibilidad.');
+  if(D['tiempoRespuesta']==='+15 min') f.push('Respuesta +15 min: el cliente ya pidió en otro lado.');
+  if(D['pedidoCocina']==='Memoria') f.push('Pedidos "de memoria" a cocina: errores garantizados en horas pico.');
+  if(D['duenoResponde']==='Sí') f.push('El dueño responde mensajes él mismo → pitch directo de "empleado digital".');
+  if(D['fotosGoogle']==='No') f.push('Google sin fotos actualizadas: pierde clientes antes de que lleguen.');
+  if(D['respondeResenas']==='No') f.push('No responde reseñas: señal de abandono para clientes nuevos.');
+  if(D['noShows']==='Frecuente') f.push('No-shows frecuentes: recuperable con confirmación automática por WhatsApp.');
+  if(D['quienDecide'] && D['quienDecide']!=='Dueño solo') f.push('Decide con '+D['quienDecide'].toLowerCase()+': agendá segunda reunión con todos. No vas a cerrar hoy.');
+  if(D['invirtioAntes'] && D['invirtioAntes'].length>3) f.push('Ya invirtió antes: anticipá la objeción → "por eso es sin contrato, cancelás a 30 días".');
+  return f;
+}
+
+/* ================= RENDER ================= */
+function pillClass(fd, opt, selected){
+  if(!selected) return 'pill';
+  if(fd.t==='yn'){
+    const bad = fd.inv ? (fd.k==='canalDirecto'||fd.k==='baseDatos'||fd.k==='seguimiento' ? 'No' : 'Sí') : null;
+    if(bad) return 'pill '+(opt===bad?'sel-bad':'sel-ok');
+    return 'pill sel';
+  }
+  if(fd.bad && opt===fd.bad) return 'pill sel-bad';
+  return 'pill sel';
+}
+
+function renderField(fd){
+  const v = D[fd.k];
+  const sub = fd.s?`<small>${fd.s}</small>`:'';
+  if(fd.t==='text') return `<div class="field"><label class="fl">${fd.l}${sub}</label><input type="text" value="${v||''}" placeholder="${fd.ph||''}" oninput="setD('${fd.k}',this.value)"></div>`;
+  if(fd.t==='area') return `<div class="field"><label class="fl">${fd.l}${sub}</label><textarea oninput="setD('${fd.k}',this.value)" placeholder="${fd.ph||''}">${v||''}</textarea></div>`;
+  if(fd.t==='num') return `<div class="field"><label class="fl">${fd.l}${sub}</label><input type="number" inputmode="decimal" value="${v||''}" placeholder="${fd.ph||''}" oninput="setD('${fd.k}',this.value)"></div>`;
+  if(fd.t==='money') return `<div class="field"><label class="fl">${fd.l}${sub}</label><div class="money"><input type="number" inputmode="decimal" value="${v||''}" oninput="setD('${fd.k}',this.value)"></div></div>`;
+  if(fd.t==='pill'||fd.t==='yn'){
+    const opts = fd.t==='yn'?YESNO:fd.o;
+    return `<div class="field"><label class="fl">${fd.l}${sub}</label><div class="pills">${
+      opts.map(o=>`<button class="${pillClass(fd,o,v===o)}" onclick="setD('${fd.k}', D['${fd.k}']==='${o}'?undefined:'${o}');render()">${o}</button>`).join('')
+    }</div></div>`;
+  }
+  if(fd.t==='multi'){
+    const arr = v||[];
+    return `<div class="field"><label class="fl">${fd.l}${sub}</label><div class="pills">${
+      fd.o.map(o=>`<button class="pill ${arr.includes(o)?'sel':''}" onclick="toggleMulti('${fd.k}','${o}')">${o}</button>`).join('')
+    }</div></div>`;
+  }
+  return '';
+}
+
+function sectionAlerts(s){
+  let out = '';
+  if(s.n===3 && D['nombre'] && !num('ventasDia') && !num('ticket'))
+    out += `<div class="alert warn internal">⚠️ <span><b>Alerta:</b> no conoce sus números → negocio sin control. Esto es parte del diagnóstico.</span></div>`;
+  if(s.n===5){
+    const c = num('comisionMes');
+    if(c>500 && D['canalDirecto']==='No') out += `<div class="alert leak internal">🔥 <span><b>Oportunidad #1:</b> paga ${fmt(c)}/mes en comisiones sin canal directo. Con WhatsApp propio recupera ~${fmt(c*0.5)}/mes.</span></div>`;
+  }
+  if(s.n===6 && D['pierdeMensajes']==='Sí')
+    out += `<div class="alert leak internal">💸 <span><b>Pérdida directa de dinero.</b> Anotá cuántos mensajes por semana para ponerle un número.</span></div>`;
+  if(s.n===9 && D['duenoResponde']==='Sí')
+    out += `<div class="alert warn internal">🎯 <span><b>Acá está la venta:</b> el dueño atrapado en la operación. "Un empleado digital que responde por vos, 24/7, sin sueldo."</span></div>`;
+  if(s.n===14 && D['probaria']==='Sí')
+    out += `<div class="alert ok internal">✅ <span><b>Pre-cierre logrado.</b> Pasá al diagnóstico y mostrale los números.</span></div>`;
+  return out;
+}
+
+function render(){
+  renderChips();
+  const m = document.getElementById('main');
+  if(cur === -1){ renderSaved(m); updateTicker(); window.scrollTo({top:0}); return; }
+  if(cur < SECTIONS.length){
+    const s = SECTIONS[cur];
+    m.innerHTML = `
+      <div class="eyebrow">Sección ${s.n} de 14</div>
+      <h1>${s.icon} ${s.t}</h1>
+      ${s.hint?`<p class="hint">${s.hint}</p>`:''}
+      <div class="card">${s.f.map(renderField).join('')}</div>
+      ${sectionAlerts(s)}
+      <div class="navbtns">
+        ${cur>0?`<button class="btn ghost" onclick="goTo(${cur-1})">← Anterior</button>`:''}
+        <button class="btn primary" onclick="goTo(${cur+1})">${cur===SECTIONS.length-1?'Ver diagnóstico':'Siguiente →'}</button>
+      </div>`;
+  } else {
+    renderDiag(m);
+  }
+  updateTicker();
+  window.scrollTo({top:0});
+}
+
+function renderDiag(m){
+  const leaks = calcLeaks();
+  const total = leaks.reduce((a,l)=>a+l.v,0);
+  const flags = calcFlags();
+  const main = leaks.length ? leaks.reduce((a,b)=>a.v>b.v?a:b) : null;
+  const dolor = (D['pierdeDinero']||'').trim();
+  const oferta = num('ofertaPrecio');
+  const nombre = D['nombre']||'este negocio';
+
+  let cierre = '';
+  if(main){
+    cierre = `<b>${nombre}</b> está perdiendo aproximadamente <b>${fmt(total)}/mes</b>` +
+      (main? `, principalmente por <b>${main.n.toLowerCase()}</b>`:'') +
+      (dolor? ` — que coincide con lo que el dueño mismo nombró` : '') +
+      `. Esto se resuelve con el paquete MB360` + (oferta?` a <b>${fmt(oferta)}/mes</b>, sin contrato, cancelable a 30 días`:' (poné tu precio abajo)') + `.`;
+  } else {
+    cierre = `Todavía no hay fugas cuantificadas. Volvé a las secciones 3, 5, 6, 7 y 12 y completá los números clave (ventas/día, ticket, comisiones, mensajes perdidos).`;
+  }
+
+  m.innerHTML = `
+    <div class="eyebrow" style="color:var(--leak)">Diagnóstico</div>
+    <h1>🔥 Fugas de dinero</h1>
+    <p class="hint internal">Girá el celular y mostrá esta pantalla al dueño. Activá "Modo cliente" para ocultar tus notas internas.</p>
+
+    <div class="diag-total">
+      <div class="dl">Fuga total estimada</div>
+      <div class="dv">${fmt(total)}</div>
+      <div class="dm">por mes · estimación conservadora</div>
+    </div>
+
+    <div class="card">
+      ${leaks.length ? leaks.map(l=>`
+        <div class="leakrow">
+          <div class="ln">${l.n}<small>${l.d}</small></div>
+          <div class="lv ${l.op?'op':''}">${fmt(l.v)}/mes</div>
+        </div>`).join('') : '<p class="hint" style="margin:0">Sin datos suficientes para calcular fugas.</p>'}
+    </div>
+
+    <div class="cierre">${cierre}</div>
+
+    <div class="card internal">
+      <label class="fl">Tu oferta ($/mes)<small>Se inserta en la frase de cierre</small></label>
+      <div class="money"><input type="number" inputmode="decimal" value="${D['ofertaPrecio']||''}" oninput="setD('ofertaPrecio',this.value);"></div>
+      <div class="navbtns" style="margin-top:12px"><button class="btn ghost" onclick="render()">Actualizar frase</button></div>
+    </div>
+
+    ${flags.length?`<div class="card flags internal">
+      <label class="fl">Señales para tu pitch</label>
+      ${flags.map(f=>`<div class="fitem">▸ <span>${f}</span></div>`).join('')}
+    </div>`:''}
+
+    <div class="exports">
+      <button class="btn primary" onclick="saveAudit()">💾 Guardar auditoría</button>
+      <button class="btn ghost" onclick="copyResumen()">📋 Copiar resumen</button>
+      <button class="btn ghost" onclick="downloadJSON()">⬇️ Descargar datos</button>
+      <button class="btn ghost" onclick="toggleClient()" id="cmBtn">${document.body.classList.contains('clientmode')?'🔓 Salir de modo cliente':'👤 Modo cliente'}</button>
+      <button class="btn danger" onclick="resetAll()">🗑️ Nueva auditoría</button>
+      <button class="btn ghost" onclick="goTo(-1)">📂 Ver guardadas</button>
+    </div>
+    <div class="navbtns"><button class="btn ghost" onclick="goTo(${SECTIONS.length-1})">← Volver al formulario</button></div>
+    <p class="hint internal" style="margin-top:14px">☁️ "Guardar" envía la auditoría a la Base Central MB360. "Descargar" mantiene un JSON como respaldo local.</p>
+  `;
+}
+
+/* ================= CHIPS / NAV ================= */
+function sectionDone(s){ return s.f.some(fd=>{ const v=D[fd.k]; return v!==undefined && v!=='' && !(Array.isArray(v)&&!v.length); }); }
+function renderChips(){
+  const c = document.getElementById('chips');
+  c.innerHTML = `<button class="chip ${cur===-1?'active':''}" onclick="goTo(-1)">📂</button>` + SECTIONS.map((s,i)=>
+    `<button class="chip ${i===cur?'active':''} ${sectionDone(s)&&i!==cur?'done':''}" onclick="goTo(${i})">${s.n}</button>`
+  ).join('') + `<button class="chip diag ${cur===SECTIONS.length?'active':''}" onclick="goTo(${SECTIONS.length})">🔥 Diagnóstico</button>`;
+  const act = c.querySelector('.active'); if(act) act.scrollIntoView({inline:'center',block:'nearest'});
+}
+function goTo(i){
+  cur = Math.max(-1, Math.min(SECTIONS.length, i));
+  if(D['nombre']) saveAudit(true); // autoguardado silencioso
+  render();
+}
+
+/* ================= STATE ================= */
+function setD(k,v){ if(v===undefined||v===''){ delete D[k]; } else { D[k]=v; } updateTicker(); }
+function toggleMulti(k,o){
+  const arr = D[k]||[];
+  D[k] = arr.includes(o) ? arr.filter(x=>x!==o) : [...arr,o];
+  if(!D[k].length) delete D[k];
+  render();
+}
+function updateTicker(){
+  const total = calcLeaks().reduce((a,l)=>a+l.v,0);
+  const el = document.getElementById('tickerVal');
+  el.textContent = fmt(total)+'/mes';
+  el.classList.toggle('zero', total===0);
+  renderChips();
+}
+
+/* ================= EXPORT ================= */
+function resumenTexto(){
+  const leaks = calcLeaks(); const total = leaks.reduce((a,l)=>a+l.v,0);
+  let t = `📋 AUDITORÍA MB360 — ${D['nombre']||'Sin nombre'}\n`;
+  t += `📍 ${D['ubicacion']||'—'} · ${D['tipo']||'—'}\n\n`;
+  t += `🔥 FUGA TOTAL ESTIMADA: ${fmt(total)}/mes\n\n`;
+  leaks.forEach(l=>{ t += `• ${l.n}: ${fmt(l.v)}/mes (${l.d})\n`; });
+  t += `\n💬 Dolor del dueño: ${D['pierdeDinero']||'—'}\n`;
+  t += `📊 Ventas/día: ${num('ventasDia')?fmt(num('ventasDia')):'—'} · Ticket: ${num('ticket')?fmt(num('ticket')):'—'}\n`;
+  t += `🛵 Comisiones apps: ${num('comisionMes')?fmt(num('comisionMes'))+'/mes':'—'} · Canal directo: ${D['canalDirecto']||'—'}\n`;
+  t += `👥 Decide: ${D['quienDecide']||'—'} · ¿Probaría un mes?: ${D['probaria']||'—'}\n`;
+  const of = num('ofertaPrecio'); if(of) t += `\n💰 Propuesta: ${fmt(of)}/mes, sin contrato, cancelable a 30 días.`;
+  return t;
+}
+function copyResumen(){
+  const t = resumenTexto();
+  if(navigator.clipboard){ navigator.clipboard.writeText(t).then(()=>toast('Resumen copiado ✓')).catch(()=>fallbackCopy(t)); }
+  else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select();
+  try{document.execCommand('copy');toast('Resumen copiado ✓')}catch(e){toast('No se pudo copiar')}
+  document.body.removeChild(ta);
+}
+function downloadJSON(){
+  const blob = new Blob([JSON.stringify({fecha:new Date().toISOString(), datos:D, fugas:calcLeaks(), resumen:resumenTexto()},null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mb360-auditoria-'+(D['nombre']||'negocio').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.json';
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Datos descargados ✓');
+}
+function toggleClient(){
+  document.body.classList.toggle('clientmode');
+  const b = document.getElementById('cmBtn');
+  if(b) b.textContent = document.body.classList.contains('clientmode') ? '🔓 Salir de modo cliente' : '👤 Modo cliente';
+}
+function resetAll(){
+  if(confirm('¿Borrar todos los datos y empezar una nueva auditoría?')){
+    Object.keys(D).forEach(k=>delete D[k]); currentClientId=currentLocationId=currentAuditId=null; document.body.classList.remove('clientmode'); cur=0; render();
+  }
+}
+function toast(msg){
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ================= PERSISTENCIA (Base Central MB360 / Supabase) ================= */
+async function saveAudit(silent){
+  try{
+    await ensureCentralRecords();
+    const leaks=calcLeaks();
+    const total=leaks.reduce((a,l)=>a+l.v,0);
+    const payload={
+      client_id:currentClientId,
+      location_id:currentLocationId,
+      audit_version:'2.0-central',
+      raw_answers:JSON.parse(JSON.stringify(D)),
+      estimated_monthly_leak:Math.round(total*100)/100,
+      diagnosis:{leaks,flags:calcFlags()},
+      summary:resumenTexto()
+    };
+    if(currentAuditId){
+      if(!silent) payload.status='completed';
+      const {error}=await sb.from('audits').update(payload).eq('id',currentAuditId);
+      if(error) throw error;
+    } else {
+      payload.status=silent?'draft':'completed';
+      const {data,error}=await sb.from('audits').insert(payload).select('id').single();
+      if(error) throw error;
+      currentAuditId=data.id;
+    }
+    if(!silent) toast('Auditoría guardada en MB360 ✓');
+  }catch(e){
+    console.error(e);
+    if(!silent) toast('Error: '+(e.message||'no se pudo guardar'));
+  }
+}
+
+async function loadAudit(id){
+  try{
+    const {data,error}=await sb.from('audits')
+      .select('id,client_id,location_id,raw_answers')
+      .eq('id',id).single();
+    if(error) throw error;
+    Object.keys(D).forEach(k=>delete D[k]);
+    Object.assign(D,data.raw_answers||{});
+    currentAuditId=data.id; currentClientId=data.client_id; currentLocationId=data.location_id;
+    cur=SECTIONS.length; render(); toast('Auditoría cargada ✓');
+  }catch(e){ console.error(e); toast('Error al cargar'); }
+}
+
+async function deleteAudit(id,nombre){
+  if(!confirm('¿Borrar la auditoría de "'+nombre+'"? No se puede deshacer.')) return;
+  try{
+    const {error}=await sb.from('audits').delete().eq('id',id);
+    if(error) throw error;
+    if(currentAuditId===id) currentAuditId=null;
+    toast('Auditoría borrada'); render();
+  }catch(e){ console.error(e); toast('Error al borrar'); }
+}
+
+async function renderSaved(m){
+  m.innerHTML=`<div class="eyebrow">Base Central</div><h1>📂 Auditorías MB360</h1><p class="hint">Cargando…</p>`;
+  try{
+    const {data,error}=await sb.from('audits')
+      .select('id,audit_date,estimated_monthly_leak,status,clients(business_name),locations(address)')
+      .order('audit_date',{ascending:false}).limit(100);
+    if(error) throw error;
+    const items=data||[];
+    m.innerHTML=`
+      <div class="eyebrow">Base Central</div><h1>📂 Auditorías MB360</h1>
+      <p class="hint">Tocá una auditoría para continuarla o revisar el diagnóstico.</p>
+      <div class="card">${items.length?items.map(it=>{
+        const nombre=it.clients?.business_name||'Sin nombre';
+        const fecha=it.audit_date?new Date(it.audit_date).toLocaleDateString('es-US',{day:'numeric',month:'short',year:'numeric'}):'';
+        return `<div class="leakrow"><div class="ln" style="cursor:pointer" onclick="loadAudit('${it.id}')">${nombre}<small>${fecha} · ${it.status||''} · fuga est. $${Math.round(it.estimated_monthly_leak||0).toLocaleString('en-US')}/mes</small></div><button class="pill" style="min-height:36px;padding:7px 12px" onclick="deleteAudit('${it.id}','${String(nombre).replace(/'/g,"\\'")}')">🗑️</button></div>`;
+      }).join(''):'<p class="hint" style="margin:0">Todavía no hay auditorías en la Base Central.</p>'}</div>
+      <div class="navbtns"><button class="btn ghost" onclick="newCentralAudit()">+ Nueva auditoría</button><button class="btn primary" onclick="goTo(0)">Continuar actual →</button></div>`;
+  }catch(e){
+    console.error(e);
+    m.innerHTML=`<div class="eyebrow">Base Central</div><h1>📂 Auditorías MB360</h1><div class="alert warn">⚠️ <span>No se pudo leer la Base Central. Verifica que tu cuenta tenga autorización MB360.</span></div><div class="navbtns"><button class="btn primary" onclick="goTo(0)">Ir al formulario →</button></div>`;
+  }
+}
+function newCentralAudit(){
+  if(!confirm('¿Empezar una auditoría nueva?')) return;
+  Object.keys(D).forEach(k=>delete D[k]); currentClientId=currentLocationId=currentAuditId=null; cur=0; render();
+}
+
+initAuth();
+
+render();
+</script>
+</body>
+</html>
+
+
