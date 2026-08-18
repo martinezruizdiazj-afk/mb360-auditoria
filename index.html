@@ -782,7 +782,6 @@ function renderAppNav(){
   const active=nav.querySelector('.active'); if(active) active.scrollIntoView({inline:'center',block:'nearest'});
 }
 function openTool(id,quiet=false){
-  if(id==='onboarding'){ window.location.href='./inicio-cliente-maestro.html'; return; }
   if(!APP_TOOLS.some(t=>t.id===id)) id='home';
   if(currentTool==='audit' && id!=='audit' && D['nombre']) saveAudit(true);
   currentTool=id;
@@ -867,25 +866,16 @@ async function renderDashboard(m){
 }
 
 async function renderOnboarding(m){
-  m.innerHTML=pageHead('Configuración','🤝 Inicio de cliente','Crea la ficha operativa que alimentará el trabajo de MB360.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+'<div class="card loading">Cargando clientes…</div>';
-  try{
-    await loadClients();
-    m.innerHTML=pageHead('Configuración','🤝 Inicio de cliente','Crea la ficha operativa que alimentará el trabajo de MB360.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+
-      clientPicker('onb',true)+`<div class="card"><div class="section-title">Información estratégica</div><div class="form-grid">
-        <div><label class="field-label">Objetivo principal</label><input id="onbGoal" placeholder="Ej: aumentar pedidos directos"></div>
-        <div><label class="field-label">Oferta principal</label><input id="onbOffer" placeholder="Productos o servicios a impulsar"></div>
-        <div><label class="field-label">Cliente ideal</label><input id="onbAudience" placeholder="Quién compra y por qué"></div>
-        <div><label class="field-label">Diferencial</label><input id="onbDifference" placeholder="Por qué deberían elegirlo"></div>
-        <div><label class="field-label">Personalidad de marca</label><input id="onbVoice" placeholder="Ej: cercana, familiar y energética"></div>
-        <div><label class="field-label">Canales actuales</label><input id="onbPlatforms" placeholder="Instagram, Google, WhatsApp…"></div>
-        <div class="wide"><label class="field-label">Situación actual</label><textarea id="onbSituation" placeholder="Qué funciona, qué no y qué espera el cliente"></textarea></div>
-        <div><label class="field-label">Prioridades iniciales<small>Una por línea</small></label><textarea id="onbPriorities"></textarea></div>
-        <div><label class="field-label">Información o accesos pendientes<small>Uno por línea</small></label><textarea id="onbMissing"></textarea></div>
-        <div class="wide"><label class="field-label">Preguntas para investigar<small>Una por línea</small></label><textarea id="onbResearch"></textarea></div>
-      </div><div class="navbtns"><button class="btn primary" onclick="saveOnboarding()">Guardar inicio de cliente</button></div></div>
-      <div id="onboardingList"><div class="card loading">Cargando inicios guardados…</div></div>`;
-    refreshOnboardings();
-  }catch(e){ workspaceError(m,e); }
+  m.innerHTML=pageHead('Configuración','🤝 Inicio de cliente · Maestro','Versión Maestra MB360 integrada dentro del Centro de Operaciones.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+`
+    <div class="card" style="padding:0;overflow:hidden;background:#0b0d10;border-color:#1f2937">
+      <iframe
+        id="onboardingMasterFrame"
+        src="./inicio-cliente-maestro.html?embedded=1&v=6"
+        title="Inicio de Cliente Maestro"
+        style="display:block;width:100%;height:calc(100dvh - 190px);min-height:680px;border:0;background:#0b0d10"
+        allow="clipboard-write"
+      ></iframe>
+    </div>`;
 }
 async function saveOnboarding(){
   try{
