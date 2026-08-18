@@ -782,6 +782,7 @@ function renderAppNav(){
   const active=nav.querySelector('.active'); if(active) active.scrollIntoView({inline:'center',block:'nearest'});
 }
 function openTool(id,quiet=false){
+  if(id==='onboarding'){ window.location.href='./inicio-cliente-maestro.html'; return; }
   if(!APP_TOOLS.some(t=>t.id===id)) id='home';
   if(currentTool==='audit' && id!=='audit' && D['nombre']) saveAudit(true);
   currentTool=id;
