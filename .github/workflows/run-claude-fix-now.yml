@@ -1,0 +1,40 @@
+name: Run Claude onboarding fix now
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/run-claude-fix-now.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply Claude modified files
+        run: python scripts/apply-claude-upload.py
+      - name: Remove obsolete patchers and temporary helpers
+        run: |
+          rm -f .github/workflows/route-onboarding-master.yml
+          rm -f .github/workflows/apply-inline-master-onboarding.yml
+          rm -f scripts/inline-master-onboarding.py
+          rm -f .github/workflows/apply-claude-upload.yml
+          rm -f scripts/apply-claude-upload.py
+          rm -f .github/workflows/run-claude-fix-now.yml
+      - name: Commit final fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes needed.'
+            exit 0
+          fi
+          git commit -m 'Apply Claude native onboarding fix'
+          git push
