@@ -2,87 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>MB360 · Inicio de Cliente Maestro</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
-<link rel="stylesheet" href="inicio-cliente.css?v=maestro5">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="0;url=./index.html">
+<title>MB360 · Redirigiendo…</title>
+<script>location.replace('./index.html');</script>
 </head>
-<body>
-<div class="wrap">
-  <div id="login" class="login">
-    <div class="card" style="width:100%">
-      <div class="logo">MB<span>360</span></div>
-      <h2>Inicio de Cliente · Maestro</h2>
-      <p style="color:var(--m)">Versión Maestra MB360</p>
-      <div class="q"><label class="ttl">Email</label><input id="masterEmail" class="input" type="email" autocomplete="username"></div>
-      <div class="q"><label class="ttl">Contraseña</label><input id="masterPassword" class="input" type="password" autocomplete="current-password"></div>
-      <button id="masterLoginBtn" class="btn pri" style="width:100%">Entrar</button>
-      <div id="loginSt" class="status">Comprobando la sesión del Centro de Operaciones…</div>
-    </div>
-  </div>
-
-  <div id="app" class="hidden">
-    <div class="top">
-      <div class="brand">
-        <div><div class="k">MARKETBOOST360 · MAESTRO</div><h1>Inicio de Cliente</h1></div>
-        <button id="logout" class="btn sec small">Salir</button>
-      </div>
-      <div class="prog"><i id="bar"></i></div>
-      <div id="pt" class="mini"></div>
-    </div>
-
-    <div class="picker">
-      <label class="ttl">Vincular con cliente/prospecto existente</label>
-      <select id="client"><option value="">— Nuevo cliente —</option></select>
-      <div class="help">Auditoría e Inicio de Cliente quedan vinculados a la misma ficha central.</div>
-    </div>
-
-    <form id="form"></form>
-
-    <div id="review" class="card hidden">
-      <div class="head"><div class="num">✓</div><div><h2>Revisión final</h2><p>Comprueba lo esencial antes de guardar.</p></div></div>
-      <div id="sum" class="summary"></div>
-      <div class="row" style="margin-top:12px">
-        <button type="button" id="draft" class="btn sec">Guardar borrador</button>
-        <button type="button" id="final" class="btn pri">Finalizar Inicio de Cliente</button>
-      </div>
-      <div id="saveSt" class="status"></div>
-    </div>
-  </div>
-</div>
-
-<div id="nav" class="nav hidden">
-  <div class="navin">
-    <button id="prev" class="btn sec">← Anterior</button>
-    <button id="next" class="btn pri">Siguiente →</button>
-  </div>
-</div>
-
-<script src="inicio-cliente-config.js?v=maestro5"></script>
-<script src="inicio-cliente-app.js?v=maestro5"></script>
-<script>
-(function(){
-  const btn=document.getElementById('masterLoginBtn');
-  if(!btn) return;
-  btn.addEventListener('click', async function(){
-    const email=document.getElementById('masterEmail').value.trim();
-    const password=document.getElementById('masterPassword').value;
-    const st=document.getElementById('loginSt');
-    if(!email||!password){ st.textContent='Completa email y contraseña.'; st.className='status err'; return; }
-    st.textContent='Ingresando…'; st.className='status';
-    try{
-      const result=await Promise.race([
-        sb.auth.signInWithPassword({email,password}),
-        new Promise((_,reject)=>setTimeout(()=>reject(new Error('La conexión tardó demasiado. Vuelve al Centro de Operaciones e inténtalo desde allí.')),12000))
-      ]);
-      if(result.error){ st.textContent=result.error.message; st.className='status err'; return; }
-      document.getElementById('login').classList.add('hidden');
-      document.getElementById('app').classList.remove('hidden');
-      document.getElementById('nav').classList.remove('hidden');
-      restore(); await loadClients(); render();
-    }catch(e){ st.textContent=e.message||'No se pudo iniciar sesión.'; st.className='status err'; }
-  });
-})();
-</script>
+<body style="background:#0b0d10;color:#f4f7fa;font-family:-apple-system,sans-serif;padding:24px">
+Inicio de Cliente Maestro ahora vive dentro del Centro de Operaciones.
+<a href="./index.html" style="color:#8dffcc">Abrir Centro de Operaciones</a>
 </body>
 </html>

@@ -217,6 +217,9 @@ body.workspace #ticker,body.workspace #chips{display:none}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
+<link rel="stylesheet" href="inicio-cliente.css?v=native1">
+<script src="inicio-cliente-config.js?v=native1"></script>
+<script src="inicio-cliente-app.js?v=native1"></script>
 <script>
 /* ================= MB360 CENTRAL ================= */
 const SUPABASE_URL = 'https://fztdnelzhdoewxqpkxja.supabase.co';
@@ -782,8 +785,8 @@ function renderAppNav(){
   const active=nav.querySelector('.active'); if(active) active.scrollIntoView({inline:'center',block:'nearest'});
 }
 function openTool(id,quiet=false){
-  if(id==='onboarding'){ window.location.href='./inicio-cliente-maestro.html'; return; }
   if(!APP_TOOLS.some(t=>t.id===id)) id='home';
+  if(currentTool==='onboarding' && id!=='onboarding' && window.MB360Onboarding) MB360Onboarding.unmount();
   if(currentTool==='audit' && id!=='audit' && D['nombre']) saveAudit(true);
   currentTool=id;
   document.body.classList.remove('clientmode');
@@ -867,35 +870,12 @@ async function renderDashboard(m){
 }
 
 async function renderOnboarding(m){
-  m.innerHTML=pageHead('Configuración','🤝 Inicio de cliente · Maestro','Versión Maestra MB360 integrada dentro del Centro de Operaciones.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+`
-    <div class="card" style="padding:0;overflow:hidden;background:#0b0d10;border-color:#1f2937">
-      <iframe
-        id="onboardingMasterFrame"
-        src="./inicio-cliente-maestro.html?embedded=1&v=6"
-        title="Inicio de Cliente Maestro"
-        style="display:block;width:100%;height:calc(100dvh - 190px);min-height:680px;border:0;background:#0b0d10"
-        allow="clipboard-write"
-      ></iframe>
-    </div>`;
-}
-async function saveOnboarding(){
+  m.innerHTML=pageHead('Configuración','🤝 Inicio de cliente · Maestro','Versión Maestra MB360 integrada dentro del Centro de Operaciones. Misma sesión, misma Base Central.','<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>')+'<div id="onboardingHost"></div>';
   try{
-    const c=await resolveToolClient('onb',true);
-    const answers={business_goal:document.getElementById('onbGoal').value.trim(),primary_offer:document.getElementById('onbOffer').value.trim(),ideal_customer:document.getElementById('onbAudience').value.trim(),differential:document.getElementById('onbDifference').value.trim(),brand_voice:document.getElementById('onbVoice').value.trim(),platforms:document.getElementById('onbPlatforms').value.trim(),current_situation:document.getElementById('onbSituation').value.trim()};
-    const priorities=lines(document.getElementById('onbPriorities').value),missing=lines(document.getElementById('onbMissing').value),research=lines(document.getElementById('onbResearch').value);
-    const summary=`${c.name}: ${answers.business_goal||'inicio operativo'}${priorities.length?'. Prioridad: '+priorities[0]:''}`;
-    const {error}=await sb.from('onboardings').insert({client_id:c.clientId,location_id:c.locationId,form_version:'1.0-panel',raw_answers:answers,summary,missing_information:missing,preliminary_priorities:priorities,research_brief:research,status:'completed'});
-    if(error) throw error;
-    await sb.from('clients').update({status:'onboarding'}).eq('id',c.clientId).eq('status','prospect');
-    toast('Inicio de cliente guardado ✓');
-    renderOnboarding(document.getElementById('main'));
-  }catch(e){ console.error(e); toast('Error: '+(e.message||'no se pudo guardar')); }
-}
-async function refreshOnboardings(){
-  const host=document.getElementById('onboardingList'); if(!host) return;
-  const {data,error}=await sb.from('onboardings').select('id,onboarding_date,status,summary,clients(business_name)').order('onboarding_date',{ascending:false}).limit(30);
-  if(error){host.innerHTML=`<div class="alert warn">⚠️ ${esc(error.message)}</div>`;return;}
-  host.innerHTML=`<div class="card"><div class="section-title">Inicios guardados</div><div class="record-list">${data?.length?data.map(x=>`<div class="record"><div class="record-main"><div class="record-title">${esc(x.clients?.business_name||'Cliente')}</div><div class="record-meta">${dateLabel(x.onboarding_date)} · <span class="badge ok">${esc(x.status)}</span></div><div class="record-note">${esc(x.summary||'Sin resumen')}</div></div></div>`).join(''):'<div class="empty">Todavía no hay inicios de cliente.</div>'}</div></div>`;
+    if(!window.MB360Onboarding) throw new Error('No se pudo cargar el módulo de Inicio de Cliente (inicio-cliente-app.js).');
+    if(!window.MB360_SECTIONS||!window.MB360_SECTIONS.length) throw new Error('No se pudo cargar la configuración del formulario (inicio-cliente-config.js).');
+    MB360Onboarding.mount(document.getElementById('onboardingHost'), sb);
+  }catch(e){ workspaceError(m,e); }
 }
 
 async function renderProduction(m){
