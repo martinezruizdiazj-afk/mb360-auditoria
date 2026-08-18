@@ -20,13 +20,20 @@ const O={
 
   /* ---------- estado de respuestas ---------- */
   touchSource(id){ if(this.auditSource[id]==="audit") this.auditSource[id]="edited"; },
-  setv(id,v){ this.state[id]=v; this.touchSource(id); this.persist(); },
+  setv(id,v){ this.state[id]=v; this.touchSource(id); this.persist(); if(id==="business_name")this.refreshActiveClient(); },
   setvR(id,v){ this.setv(id,v); this.render(); },
   toggle(id,v){ const a=Array.isArray(this.state[id])?[...this.state[id]]:[]; const i=a.indexOf(v); i>=0?a.splice(i,1):a.push(v); this.state[id]=a; this.touchSource(id); this.persist(); this.render(); },
   setq(id,v){ this.quality[id]=v; this.persist(); this.render(); },
   sourceHint(id){ const x=this.auditSource[id]; return x?`<div class="help">${x==="edited"?"Tomado de Auditoría de Campo — actualizado en Inicio de Cliente.":"Tomado de Auditoría de Campo — editable."}</div>`:""; },
   blank(v){ return v===undefined||v===null||v===""||(Array.isArray(v)&&v.length===0); },
   setAudit(id,v){ if(this.blank(v))return; if(this.blank(this.state[id])||this.auditSource[id]==="audit"){ this.state[id]=v; this.auditSource[id]="audit"; } },
+
+  activeClientMarkup(){
+    const c=this.clients.find(x=>x.id===this.selectedClientId),name=String(c?.business_name||this.state.business_name||"").trim();
+    if(!name) return `<div id="obActiveClient" class="active-client-banner empty"><div class="active-client-copy"><span class="active-client-label">CLIENTE</span><strong>Selecciona un cliente o escribe el nombre del nuevo negocio</strong><small>Los datos quedarán vinculados a esa ficha.</small></div></div>`;
+    return `<div id="obActiveClient" class="active-client-banner"><div class="active-client-copy"><span class="active-client-label">${this.selectedClientId?"CLIENTE ACTIVO":"NUEVO CLIENTE"}</span><strong>${E(name)}</strong><small>${this.selectedClientId?"Inicio de Cliente vinculado a esta ficha central.":"Se creará una ficha central al guardar."}</small></div><div class="active-client-ok">✓</div></div>`;
+  },
+  refreshActiveClient(){ const h=this.$("obActiveClient"); if(h)h.outerHTML=this.activeClientMarkup(); },
 
   /* ---------- controles ---------- */
   qhtml(id){ return `<div class="qual"><div class="label">Calidad/origen del dato</div><div class="chips">${QUALITY.map(([v,l])=>`<button type="button" class="chip ${this.quality[id]===v?"active":""}" onclick="MB360Onboarding.setq('${id}','${v}')">${l}</button>`).join("")}</div></div>`; },
@@ -216,6 +223,9 @@ const O={
     const bt=this.state.business_type==="Otro"?(this.state.business_type_other||"Otro"):this.state.business_type;
     const r=await this.sb.from("clients").insert({business_name:this.state.business_name,business_type:bt,status:"onboarding",timezone:"America/New_York"}).select("id").single();
     if(r.error)throw r.error;
+    this.selectedClientId=r.data.id;
+    if(window.setWorkspaceActiveClient)window.setWorkspaceActiveClient(r.data.id);
+    this.refreshActiveClient();
     return r.data.id;
   },
   async save(finalize){
@@ -246,15 +256,16 @@ const O={
   async pickClient(id){
     if(!id){
       if(this.selectedClientId){ this.cur=0; this.state={}; this.quality={}; this.auditSource={}; this.onboardingId=null; }
-      this.selectedClientId=null; this.persist(); this.render(); return;
+      this.selectedClientId=null; if(window.setWorkspaceActiveClient)window.setWorkspaceActiveClient(""); this.persist(); this.refreshActiveClient(); this.render(); return;
     }
     const c=this.clients.find(x=>x.id===id); if(!c)return;
     if(this.selectedClientId&&this.selectedClientId!==id){ this.cur=0; this.state={}; this.quality={}; this.auditSource={}; this.onboardingId=null; }
     this.selectedClientId=id;
+    if(window.setWorkspaceActiveClient)window.setWorkspaceActiveClient(id);
     await this.loadAuditForClient(id);
     if(this.blank(this.state.business_name))this.state.business_name=c.business_name||"";
     if(this.blank(this.state.business_type))this.state.business_type=this.normalizeBusinessType(c.business_type);
-    this.persist(); this.render();
+    this.persist(); this.refreshActiveClient(); this.render();
   },
 
   /* ---------- ciclo de vida ---------- */
@@ -267,6 +278,7 @@ const O={
         <div class="prog"><i id="obBar"></i></div>
         <div id="obPt" class="mini"></div>
       </div>
+      ${this.activeClientMarkup()}
       <div class="picker">
         <label class="ttl">Vincular con cliente/prospecto existente</label>
         <select id="obClient"><option value="">— Nuevo cliente —</option></select>

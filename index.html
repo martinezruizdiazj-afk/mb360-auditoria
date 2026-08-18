@@ -100,6 +100,22 @@ textarea{min-height:76px;resize:vertical}
   background:transparent;border:1.5px solid #3D5AFE;color:#8FA8FF;border-radius:99px;
   padding:8px 14px;font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;cursor:pointer;
 }
+/* ---------- Cliente activo ---------- */
+.active-client-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:#E8EEFC;border:2px solid #0B48D0;border-radius:14px;padding:12px 14px;
+  margin:0 0 14px;box-shadow:0 5px 16px rgba(11,72,208,.08)
+}
+.active-client-banner .active-client-copy{min-width:0}
+.active-client-banner .active-client-label{display:block;font:800 10px 'Archivo',sans-serif;letter-spacing:.14em;color:#0B48D0;margin-bottom:2px}
+.active-client-banner strong{display:block;font:800 18px 'Archivo',sans-serif;color:#0C1524;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.active-client-banner small{display:block;color:#5B6472;font-size:12px;margin-top:2px}
+.active-client-banner .active-client-ok{width:30px;height:30px;flex:0 0 30px;border-radius:50%;display:grid;place-items:center;background:#0B48D0;color:#fff;font-weight:900}
+.active-client-banner.empty{background:#FCF1E0;border-color:#C77400;box-shadow:none}
+.active-client-banner.empty .active-client-label{color:#9B5B00}
+.active-client-banner.empty strong{font-size:15px}
+.active-client-banner.empty .active-client-ok{display:none}
+
 /* ---------- diagnosis ---------- */
 .diag-total{
   background:var(--ink);color:#fff;border-radius:var(--radius);padding:22px 18px;margin-bottom:12px;text-align:center;
@@ -217,9 +233,9 @@ body.workspace #ticker,body.workspace #chips{display:none}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
-<link rel="stylesheet" href="inicio-cliente.css?v=native1">
+<link rel="stylesheet" href="inicio-cliente.css?v=clientactive1">
 <script src="inicio-cliente-config.js?v=native1"></script>
-<script src="inicio-cliente-app.js?v=dedup20"></script>
+<script src="inicio-cliente-app.js?v=clientactive1"></script>
 <script>
 /* ================= MB360 CENTRAL ================= */
 const SUPABASE_URL = 'https://fztdnelzhdoewxqpkxja.supabase.co';
@@ -233,6 +249,7 @@ let currentAuditId = null;
 let currentTool = 'home';
 let clientCache = [];
 let productionDraft = [];
+let activeWorkspaceClientId = localStorage.getItem('mb360_active_client_id')||'';
 const APP_TOOLS = [
   {id:'home',label:'Inicio',icon:'⌂',subtitle:'Centro de operaciones'},
   {id:'audit',label:'Auditoría',icon:'🔎',subtitle:'Auditoría de campo'},
@@ -531,6 +548,7 @@ function render(){
       <div class="eyebrow">Sección ${s.n} de 14</div>
       <h1>${s.icon} ${s.t}</h1>
       ${s.hint?`<p class="hint">${s.hint}</p>`:''}
+      ${auditActiveClientBanner()}
       <div class="card">${s.f.map(renderField).join('')}</div>
       ${sectionAlerts(s)}
       <div class="navbtns">
@@ -567,6 +585,7 @@ function renderDiag(m){
     <div class="eyebrow" style="color:var(--leak)">Diagnóstico</div>
     <h1>🔥 Fugas de dinero</h1>
     <p class="hint internal">Girá el celular y mostrá esta pantalla al dueño. Activá "Modo cliente" para ocultar tus notas internas.</p>
+    ${auditActiveClientBanner()}
 
     <div class="diag-total">
       <div class="dl">Fuga total estimada</div>
@@ -624,7 +643,7 @@ function goTo(i){
 }
 
 /* ================= STATE ================= */
-function setD(k,v){ if(v===undefined||v===''){ delete D[k]; } else { D[k]=v; } updateTicker(); }
+function setD(k,v){ if(v===undefined||v===''){ delete D[k]; } else { D[k]=v; } updateTicker(); if(k==='nombre'||k==='ubicacion') updateAuditClientBanner(); }
 function toggleMulti(k,o){
   const arr = D[k]||[];
   D[k] = arr.includes(o) ? arr.filter(x=>x!==o) : [...arr,o];
@@ -690,6 +709,7 @@ function toast(msg){
 async function saveAudit(silent){
   try{
     await ensureCentralRecords();
+    if(currentClientId) setWorkspaceActiveClient(currentClientId);
     const leaks=calcLeaks();
     const total=leaks.reduce((a,l)=>a+l.v,0);
     const payload={
@@ -727,6 +747,7 @@ async function loadAudit(id){
     Object.keys(D).forEach(k=>delete D[k]);
     Object.assign(D,data.raw_answers||{});
     currentAuditId=data.id; currentClientId=data.client_id; currentLocationId=data.location_id;
+    if(currentClientId) setWorkspaceActiveClient(currentClientId);
     cur=SECTIONS.length; render(); toast('Auditoría cargada ✓');
   }catch(e){ console.error(e); toast('Error al cargar'); }
 }
@@ -765,13 +786,37 @@ async function renderSaved(m){
 }
 function newCentralAudit(){
   if(!confirm('¿Empezar una auditoría nueva?')) return;
-  Object.keys(D).forEach(k=>delete D[k]); currentClientId=currentLocationId=currentAuditId=null; cur=0; render();
+  Object.keys(D).forEach(k=>delete D[k]); currentClientId=currentLocationId=currentAuditId=null; setWorkspaceActiveClient(''); cur=0; render();
 }
 
 /* ================= CENTRO DE OPERACIONES ================= */
 function esc(v){
   return String(v??'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
 }
+function activeClientBannerMarkup(id,name='',detail='',emptyText='Selecciona un cliente antes de cargar datos'){
+  const n=String(name||'').trim(),d=String(detail||'').trim();
+  if(!n) return `<div id="${id}" class="active-client-banner empty"><div class="active-client-copy"><span class="active-client-label">CLIENTE</span><strong>${esc(emptyText)}</strong><small>Así evitas guardar información en la ficha equivocada.</small></div></div>`;
+  return `<div id="${id}" class="active-client-banner"><div class="active-client-copy"><span class="active-client-label">CLIENTE ACTIVO</span><strong>${esc(n)}</strong>${d?`<small>📍 ${esc(d)}</small>`:''}</div><div class="active-client-ok">✓</div></div>`;
+}
+function auditActiveClientBanner(){
+  return activeClientBannerMarkup('auditActiveClient',D['nombre']||'',D['ubicacion']||'','Escribe el nombre del negocio para identificar esta auditoría');
+}
+function updateAuditClientBanner(){
+  const old=document.getElementById('auditActiveClient');
+  if(old) old.outerHTML=auditActiveClientBanner();
+}
+function setWorkspaceActiveClient(id){
+  activeWorkspaceClientId=id||'';
+  try{ if(activeWorkspaceClientId)localStorage.setItem('mb360_active_client_id',activeWorkspaceClientId); else localStorage.removeItem('mb360_active_client_id'); }catch(e){}
+}
+function updateToolClientBanner(prefix){
+  const sel=document.getElementById(prefix+'Client'),host=document.getElementById(prefix+'ActiveClient');
+  if(!host)return;
+  const c=clientCache.find(x=>x.id===(sel?.value||''));
+  const loc=(c?.locations||[]).find(x=>x.is_primary)||(c?.locations||[])[0];
+  host.outerHTML=activeClientBannerMarkup(prefix+'ActiveClient',c?.business_name||'',loc?.address||'');
+}
+
 function lines(v){ return String(v||'').split(/\n|,/).map(x=>x.trim()).filter(Boolean); }
 function dateLabel(v){
   if(!v) return 'Sin fecha';
@@ -811,14 +856,18 @@ async function loadClients(force=false){
   const {data,error}=await sb.from('clients').select('id,business_name,business_type,status,locations(id,address,is_primary)').order('business_name');
   if(error) throw error;
   clientCache=data||[];
+  if(activeWorkspaceClientId&&!clientCache.some(c=>c.id===activeWorkspaceClientId)) setWorkspaceActiveClient('');
   return clientCache;
 }
 function clientOptions(selected=''){
   return `<option value="">Selecciona un cliente</option>`+clientCache.map(c=>`<option value="${c.id}" ${c.id===selected?'selected':''}>${esc(c.business_name)}</option>`).join('');
 }
 function clientPicker(prefix,allowNew=false){
-  return `<div class="card"><div class="section-title">Cliente</div><div class="form-grid">
-    <div class="${allowNew?'':'wide'}"><label class="field-label" for="${prefix}Client">Cliente existente</label><select id="${prefix}Client">${clientOptions()}</select></div>
+  const selected=activeWorkspaceClientId&&clientCache.some(c=>c.id===activeWorkspaceClientId)?activeWorkspaceClientId:'';
+  const c=clientCache.find(x=>x.id===selected);
+  const loc=(c?.locations||[]).find(x=>x.is_primary)||(c?.locations||[])[0];
+  return `${activeClientBannerMarkup(prefix+'ActiveClient',c?.business_name||'',loc?.address||'')}<div class="card"><div class="section-title">Cliente</div><div class="form-grid">
+    <div class="${allowNew?'':'wide'}"><label class="field-label" for="${prefix}Client">Cliente existente</label><select id="${prefix}Client" onchange="setWorkspaceActiveClient(this.value);updateToolClientBanner('${prefix}')">${clientOptions(selected)}</select></div>
     ${allowNew?`<div><label class="field-label" for="${prefix}NewName">O crea uno nuevo</label><input id="${prefix}NewName" type="text" placeholder="Nombre del negocio"></div>
     <div><label class="field-label" for="${prefix}Type">Tipo de negocio</label><select id="${prefix}Type"><option value="restaurant">Restaurante</option><option value="bar">Bar</option><option value="cafe">Café</option></select></div>
     <div><label class="field-label" for="${prefix}Address">Dirección principal</label><input id="${prefix}Address" type="text" placeholder="Dirección"></div>`:''}
@@ -874,7 +923,7 @@ async function renderOnboarding(m){
   try{
     if(!window.MB360Onboarding) throw new Error('No se pudo cargar el módulo de Inicio de Cliente (inicio-cliente-app.js).');
     if(!window.MB360_SECTIONS||!window.MB360_SECTIONS.length) throw new Error('No se pudo cargar la configuración del formulario (inicio-cliente-config.js).');
-    MB360Onboarding.mount(document.getElementById('onboardingHost'), sb);
+    MB360Onboarding.mount(document.getElementById('onboardingHost'), sb, activeWorkspaceClientId||currentClientId||null);
   }catch(e){ workspaceError(m,e); }
 }
 
