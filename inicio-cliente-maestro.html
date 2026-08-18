@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MB360 · Inicio de Cliente Maestro</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="inicio-cliente.css?v=maestro4">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
+<link rel="stylesheet" href="inicio-cliente.css?v=maestro5">
 </head>
 <body>
 <div class="wrap">
@@ -17,7 +17,7 @@
       <div class="q"><label class="ttl">Email</label><input id="masterEmail" class="input" type="email" autocomplete="username"></div>
       <div class="q"><label class="ttl">Contraseña</label><input id="masterPassword" class="input" type="password" autocomplete="current-password"></div>
       <button id="masterLoginBtn" class="btn pri" style="width:100%">Entrar</button>
-      <div id="loginSt" class="status">Puedes iniciar sesión directamente aquí.</div>
+      <div id="loginSt" class="status">Comprobando la sesión del Centro de Operaciones…</div>
     </div>
   </div>
 
@@ -58,8 +58,8 @@
   </div>
 </div>
 
-<script src="inicio-cliente-config.js?v=maestro4"></script>
-<script src="inicio-cliente-app.js?v=maestro4"></script>
+<script src="inicio-cliente-config.js?v=maestro5"></script>
+<script src="inicio-cliente-app.js?v=maestro5"></script>
 <script>
 (function(){
   const btn=document.getElementById('masterLoginBtn');
@@ -70,9 +70,17 @@
     const st=document.getElementById('loginSt');
     if(!email||!password){ st.textContent='Completa email y contraseña.'; st.className='status err'; return; }
     st.textContent='Ingresando…'; st.className='status';
-    const {error}=await sb.auth.signInWithPassword({email,password});
-    if(error){ st.textContent=error.message; st.className='status err'; return; }
-    location.reload();
+    try{
+      const result=await Promise.race([
+        sb.auth.signInWithPassword({email,password}),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('La conexión tardó demasiado. Vuelve al Centro de Operaciones e inténtalo desde allí.')),12000))
+      ]);
+      if(result.error){ st.textContent=result.error.message; st.className='status err'; return; }
+      document.getElementById('login').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+      document.getElementById('nav').classList.remove('hidden');
+      restore(); await loadClients(); render();
+    }catch(e){ st.textContent=e.message||'No se pudo iniciar sesión.'; st.className='status err'; }
   });
 })();
 </script>
