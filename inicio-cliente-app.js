@@ -305,6 +305,7 @@ const O={
     this.$("obDraft").onclick=()=>this.save(false);
     this.$("obFinal").onclick=()=>this.save(true);
     this.restore();
+    this.refreshActiveClient();
     this.render();
     this.loadClients(this.initialClientId);
   },
