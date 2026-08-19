@@ -924,7 +924,7 @@ function renderClientList(query=''){
     const loc=clientMainLocation(c),active=c.id===activeWorkspaceClientId;
     return `<div class="record" style="align-items:flex-start">
       <div class="record-main">
-        <div class="record-title">${esc(c.business_name||'Sin nombre')} ${active?'<span class="badge ok">Cliente activo</span>':''}</div>
+        <div class="record-title" style="cursor:pointer" onclick="openClientProfile('${c.id}')">${esc(c.business_name||'Sin nombre')} ${active?'<span class="badge ok">Cliente activo</span>':''}</div>
         <div class="record-meta">${esc(clientTypeLabel(c.business_type))} · <span class="badge ${c.status==='active'?'ok':'gray'}">${esc(clientStatusLabel(c.status))}</span>${loc?.address?' · 📍 '+esc(loc.address):''}</div>
         <div class="record-actions" style="margin-top:10px;flex-wrap:wrap">
           <button class="mini-btn ${active?'ok':''}" onclick="selectClientFromList('${c.id}')">${active?'Seleccionado ✓':'Seleccionar'}</button>
@@ -954,8 +954,26 @@ async function renderClients(m){
   }catch(e){ workspaceError(m,e); }
 }
 function selectClientFromList(id){
+  openClientProfile(id);
+}
+function openClientProfile(id){
+  const c=clientCache.find(x=>x.id===id); if(!c) return;
   setWorkspaceActiveClient(id);
-  renderClients(document.getElementById('main'));
+  const loc=clientMainLocation(c),m=document.getElementById('main');
+  m.innerHTML=pageHead('Cliente',`👤 ${esc(c.business_name||'Sin nombre')}`,'Ficha central del cliente. Desde aquí puedes continuar en cualquier módulo.','<button class="btn ghost" onclick="renderClients(document.getElementById(\'main\'))">← Clientes</button>')+
+    activeClientBannerMarkup('clientProfileActive',c.business_name||'',loc?.address||'')+
+    `<div class="card"><div class="section-title">Datos del cliente</div>
+      <div class="record"><div class="record-main"><div class="record-title">${esc(c.business_name||'Sin nombre')}</div><div class="record-meta">${esc(clientTypeLabel(c.business_type))} · <span class="badge ${c.status==='active'?'ok':'gray'}">${esc(clientStatusLabel(c.status))}</span>${loc?.address?' · 📍 '+esc(loc.address):''}</div></div></div>
+    </div>
+    <div class="card"><div class="section-title">Continuar trabajando</div><div class="record-actions" style="flex-wrap:wrap;gap:9px">
+      <button class="mini-btn" onclick="openClientWorkspace('${c.id}','audit')">🔎 Auditoría</button>
+      <button class="mini-btn" onclick="openClientWorkspace('${c.id}','onboarding')">🤝 Inicio de cliente</button>
+      <button class="mini-btn" onclick="openClientWorkspace('${c.id}','production')">🎬 Producción</button>
+      <button class="mini-btn" onclick="openClientWorkspace('${c.id}','tasks')">✓ Tareas</button>
+      <button class="mini-btn" onclick="openClientWorkspace('${c.id}','metrics')">↗ Resultados</button>
+      <button class="mini-btn" onclick="openClientWorkspace('${c.id}','reports')">▤ Reportes</button>
+    </div></div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 function startNewClient(){
   setWorkspaceActiveClient('');
