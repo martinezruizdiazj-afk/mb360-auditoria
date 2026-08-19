@@ -827,8 +827,15 @@ function dateLabel(v){
 function renderAppNav(){
   const nav=document.getElementById('appnav');
   if(!nav) return;
-  nav.innerHTML=APP_TOOLS.map(t=>`<button class="${currentTool===t.id?'active':''}" onclick="openTool('${t.id}')">${t.icon} ${t.label}</button>`).join('');
+  nav.innerHTML=APP_TOOLS.map(t=>`<button class="${currentTool===t.id?'active':''}" onclick="${t.id==='audit'?'openSelectedClientAudit()':`openTool('${t.id}')`}">${t.icon} ${t.label}</button>`).join('');
   const active=nav.querySelector('.active'); if(active) active.scrollIntoView({inline:'center',block:'nearest'});
+}
+async function openSelectedClientAudit(){
+  if(activeWorkspaceClientId){
+    await openClientWorkspace(activeWorkspaceClientId,'audit');
+    return;
+  }
+  openTool('audit');
 }
 function openTool(id,quiet=false){
   if(!APP_TOOLS.some(t=>t.id===id)) id='home';
@@ -1011,7 +1018,7 @@ async function renderDashboard(m){
     m.querySelector('.stats').innerHTML=[['Clientes',stats[0]],['Auditorías',stats[1]],['Tareas abiertas',stats[2]],['Producciones',stats[3]]].map(([l,v])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
     m.insertAdjacentHTML('beforeend',`<div class="tool-grid">
       <button class="tool-card" onclick="openTool('clients')"><div class="tool-icon">👥</div><h2>Clientes</h2><p>Ve todos los clientes, busca uno y elígelo antes de abrir cualquier módulo.</p><span class="tool-link">Abrir clientes →</span></button>
-      <button class="tool-card" onclick="openTool('audit')"><div class="tool-icon">🔎</div><h2>Auditoría de campo</h2><p>Detecta fugas de dinero y prepara el diagnóstico comercial.</p><span class="tool-link">Abrir auditoría →</span></button>
+      <button class="tool-card" onclick="openSelectedClientAudit()"><div class="tool-icon">🔎</div><h2>Auditoría de campo</h2><p>Detecta fugas de dinero y prepara el diagnóstico comercial.</p><span class="tool-link">Abrir auditoría →</span></button>
       <button class="tool-card" onclick="openTool('onboarding')"><div class="tool-icon">🤝</div><h2>Inicio de cliente</h2><p>Registra objetivos, oferta, audiencia, accesos y prioridades.</p><span class="tool-link">Abrir inicio →</span></button>
       <button class="tool-card" onclick="openTool('production')"><div class="tool-icon">🎬</div><h2>Producción de contenido</h2><p>Planifica sesiones y crea la lista de tomas para grabar.</p><span class="tool-link">Abrir producción →</span></button>
       <button class="tool-card" onclick="openTool('tasks')"><div class="tool-icon">✅</div><h2>Tareas</h2><p>Asigna prioridades, responsables y fechas de entrega.</p><span class="tool-link">Ver tareas →</span></button>
