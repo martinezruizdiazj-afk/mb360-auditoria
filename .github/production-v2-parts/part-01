@@ -1,0 +1,85 @@
+    const pieces=new Set(activeShots.map(x=>x.subject_name||x.product_id||x.description)).size;
+    const alerts=buildAlerts(d);
+    return `<div class="prod2-stats">
+      <div class="prod2-stat"><span>Próxima sesión</span><b>${next?fmtDateTime(next.scheduled_date):'Sin programar'}</b></div>
+      <div class="prod2-stat"><span>Tomas pendientes</span><b>${activeShots.length}</b></div>
+      <div class="prod2-stat"><span>Última producción</span><b>${last?fmtDateTime(last.actual_date||last.scheduled_date):'—'}</b></div>
+      <div class="prod2-stat"><span>Piezas pendientes</span><b>${pieces}</b></div>
+    </div>
+    <div class="prod2-primary"><button class="btn primary" onclick="prod2Go('new')">+ Nueva producción</button><button class="btn ghost" onclick="prod2Go('plan')">Generar plan semanal</button></div>
+    ${alerts.length?`<div class="card"><div class="section-title">Prioridades y alertas</div>${alerts.map(a=>`<div class="prod2-alert ${a.level}"><b>${a.icon} ${safe(a.title)}</b><small>${safe(a.detail)}</small></div>`).join('')}</div>`:''}
+    <div class="card"><div class="section-title">Próximas producciones</div>${future.length?future.slice(0,6).map(sessionRow).join(''):'<div class="empty">No hay producciones próximas.</div>'}</div>
+    <div class="card"><div class="section-title">Últimas producciones</div>${d.sessions.length?d.sessions.slice(0,8).map(sessionRow).join(''):'<div class="empty">Todavía no hay producciones.</div>'}</div>`;
+  }
+
+  function buildAlerts(d){
+    const alerts=[]; const now=new Date(); const end=new Date(now); end.setDate(end.getDate()+7);
+    const upcoming=d.sessions.filter(s=>s.scheduled_date && new Date(s.scheduled_date)>=now && new Date(s.scheduled_date)<=end && !['completed','cancelled','delivered_to_editing'].includes(s.status));
+    if(!upcoming.length) alerts.push({level:'high',icon:'⚠️',title:'No hay producción programada para los próximos 7 días',detail:'Crea una sesión o genera el plan semanal.'});
+    const repeat=d.sessions.flatMap(s=>s.production_shots||[]).filter(x=>x.status==='repeat').length;
+    if(repeat) alerts.push({level:'high',icon:'🔁',title:`Hay ${repeat} toma${repeat===1?'':'s'} para repetir`,detail:'Conviene incluirlas en la próxima sesión.'});
+    const emptySessions=d.sessions.filter(s=>['planned','confirmed'].includes(s.status)&&(s.production_shots||[]).length===0);
+    if(emptySessions.length) alerts.push({level:'medium',icon:'📋',title:'Hay sesiones sin lista de tomas',detail:'Completa el checklist antes de ir al cliente.'});
+    const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-30);
+    const recentSubjects=new Set(d.sessions.filter(s=>new Date(s.actual_date||s.scheduled_date||s.created_at)>=cutoff).flatMap(s=>s.production_shots||[]).filter(x=>x.status==='recorded'||x.completed).map(x=>normalize(x.subject_name)));
+    const stale=d.products.filter(p=>p.client_wants_to_push&&!recentSubjects.has(normalize(p.name)));
+    if(stale.length) alerts.push({level:'medium',icon:'🎯',title:'Falta material reciente de productos prioritarios',detail:stale.slice(0,3).map(x=>x.name).join(', ')});
+    const raw=d.onboarding?.raw_answers||{};
+    if(text(raw.scheduled_events).trim() && !d.media.some(x=>new Date(x.created_at)>=cutoff)) alerts.push({level:'medium',icon:'📣',title:'Hay eventos/promociones registrados y poco material reciente',detail:'Revisa el calendario antes de la próxima producción.'});
+    return alerts;
+  }
+
+  function sessionRow(s){
+    const shots=s.production_shots||[], recorded=shots.filter(x=>(x.status==='recorded'||x.completed)).length, pending=shots.filter(x=>['pending','repeat'].includes(x.status||'pending')).length;
+    return `<button class="prod2-session-row" onclick="prod2OpenSession('${s.id}')"><div><b>${safe(s.production_goal||'Producción')}</b><small>${fmtDateTime(s.scheduled_date)} · ${typeLabel(s.production_type)} · ${recorded}/${shots.length} grabadas${pending?` · ${pending} pendientes`:''}</small></div><span class="prod2-badge">${safe(statusLabel(s.status))}</span></button>`;
+  }
+
+  function newSessionHtml(d){
+    const c=activeClient(), loc=mainLoc(c);
+    const products=d.products||[];
+    const warnings=P2.tempWarnings||[];
+    return `<div class="card"><div class="section-title">Nueva producción</div><div class="form-grid">
+      <div><label class="field-label">Fecha y hora</label><input id="p2Date" type="datetime-local" onchange="prod2PreviewWarnings()"></div>
+      <div><label class="field-label">Lugar</label><select id="p2Location"><option value="${loc?.id||''}">Local principal${loc?.address?' · '+safe(loc.address):''}</option><option value="other">Otra ubicación</option></select></div>
+      <div><label class="field-label">Tipo de producción</label><select id="p2Type"><option value="photo">Foto</option><option value="video">Video</option><option value="photo_video" selected>Foto + video</option></select></div>
+      <div><label class="field-label">Estado inicial</label><select id="p2Status"><option value="planned">Planificada</option><option value="confirmed">Confirmada</option></select></div>
+      <div class="wide"><label class="field-label">Objetivo de la sesión</label><input id="p2Goal" placeholder="Ej: impulsar almuerzos de lunes a jueves"></div>
+      <div class="wide"><label class="field-label">Qué queremos producir</label><div class="prod2-checks">${['Reels','Stories','Fotos Instagram','Google Business Profile','Anuncios','Menú / web'].map(x=>`<label><input type="checkbox" name="p2Output" value="${x}"> ${x}</label>`).join('')}</div></div>
+      <div><label class="field-label">Responsable de grabación</label><input id="p2Recording" placeholder="Nombre"></div>
+      <div><label class="field-label">Fotografía</label><input id="p2Photo" placeholder="Nombre"></div>
+      <div><label class="field-label">Edición</label><input id="p2Editing" placeholder="Pendiente / nombre"></div>
+      <div><label class="field-label">Asistente</label><input id="p2Assistant" placeholder="Opcional"></div>
+      <div class="wide"><label class="field-label">Notas</label><textarea id="p2Notes" placeholder="Equipo, productos, indicaciones del cliente…"></textarea></div>
+    </div></div>
+    <div id="p2Warnings">${warningHtml(warnings)}</div>
+    <div class="card"><div class="section-title">Lista exacta de tomas</div><div class="form-grid">
+      <div><label class="field-label">Producto / plato</label><input id="p2Subject" list="p2Products" placeholder="Ej: Pizza especial"><datalist id="p2Products">${products.map(p=>`<option value="${safe(p.name)}"></option>`).join('')}</datalist></div>
+      <div><label class="field-label">Tipo</label><select id="p2ShotType"><option>Producto</option><option>Ambiente</option><option>Proceso</option><option>Testimonio</option><option>Promoción</option><option>Equipo</option></select></div>
+      <div class="wide"><label class="field-label">Descripción de la toma</label><input id="p2Desc" placeholder="Ej: close-up saliendo del horno"></div>
+      <div><label class="field-label">Formato</label><select id="p2Orientation"><option value="9:16">9:16</option><option value="4:5">4:5</option><option value="1:1">1:1</option><option value="16:9">16:9</option></select></div>
+      <div><label class="field-label">Uso previsto</label><select id="p2Use"><option>Reel</option><option>Story</option><option>Google</option><option>Anuncio</option><option>Menú / web</option><option>Otro</option></select></div>
+      <div><label class="field-label">Prioridad</label><select id="p2Priority"><option value="high">Alta</option><option value="medium" selected>Media</option><option value="low">Baja</option></select></div>
+      <div><label class="field-label">Asignada a</label><input id="p2Assignee" placeholder="Opcional"></div>
+    </div><div class="prod2-primary"><button class="btn ghost" onclick="prod2AddDraftShot()">+ Agregar toma</button></div><div id="p2Draft">${draftShotsHtml()}</div></div>
+    <div class="prod2-sticky"><button class="btn primary" onclick="prod2SaveSession()">Guardar producción</button></div>`;
+  }
+
+  function warningHtml(w){
+    return w?.length?`<div class="card"><div class="section-title">Validación antes de programar</div>${w.map(x=>`<div class="prod2-alert ${x.level||'medium'}"><b>⚠️ ${safe(x.title)}</b><small>${safe(x.detail||'')}</small></div>`).join('')}</div>`:'';
+  }
+
+  function draftShotsHtml(){
+    if(!P2.draftShots.length) return '<div class="empty">Agrega las tomas que no pueden faltar.</div>';
+    return P2.draftShots.map((s,i)=>`<div class="prod2-draft"><div><b>${safe(s.subject_name||s.shot_type)} · ${safe(s.orientation)}</b><small>${safe(s.description)} · ${safe(s.planned_use)} · Prioridad ${safe(prioLabel(s.priority))}</small></div><button class="mini-btn" onclick="prod2RemoveDraftShot(${i})">Quitar</button></div>`).join('');
+  }
+
+  function validateDraft(dateValue,d){
+    const warnings=[]; const raw=d.onboarding?.raw_answers||{};
+    if(dateValue){
+      const dt=new Date(dateValue); const day=dayNames[dt.getDay()];
+      const avoidDays=normalize(raw.visit_avoid_days);
+      if(avoidDays.includes(normalize(day))) warnings.push({level:'high',title:`${day.charAt(0).toUpperCase()+day.slice(1)} figura como día a evitar`,detail:'El Inicio de Cliente recomienda no realizar visitas este día.'});
+      const avoidTimes=normalize(raw.visit_avoid_times);
+      if(avoidTimes){ warnings.push({level:'medium',title:'Hay horarios que el cliente pidió evitar',detail:text(raw.visit_avoid_times)}); }
+      const matching=d.slots.filter(x=>Number(x.day_of_week)===dt.getDay());
+      if(matching.some(x=>['high','very_high','saturated'].includes(normalize(x.demand_level)))) warnings.push({level:'medium',title:'Ese día tiene franjas de alta demanda',detail:'Revisa la hora para no interferir con la operación.'});
