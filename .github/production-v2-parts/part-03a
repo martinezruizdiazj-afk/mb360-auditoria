@@ -1,0 +1,43 @@
+    try{ const r=await sb.from('metrics').select('metric_key,metric_value,source,period_start,metadata').eq('client_id',s.client_id).contains('metadata',{production_session_id:sessionId}).limit(20); metrics=r.data||[]; }catch(e){}
+    const shots=(s.production_shots||[]).sort((a,b)=>(a.position||0)-(b.position||0));
+    const statusOf=x=>x.status|| (x.completed?'recorded':'pending');
+    const filtered=P2.filter==='all'?shots:shots.filter(x=>statusOf(x)===P2.filter);
+    const counts={all:shots.length,pending:shots.filter(x=>statusOf(x)==='pending').length,recorded:shots.filter(x=>statusOf(x)==='recorded').length,repeat:shots.filter(x=>statusOf(x)==='repeat').length,discarded:shots.filter(x=>statusOf(x)==='discarded').length};
+    const filesByShot={}; (media||[]).forEach(f=>(filesByShot[f.production_shot_id] ||= []).push(f));
+    const resp=s.responsibles||{};
+    const progress=shots.length?Math.round(counts.recorded/shots.length*100):0;
+    return `<div class="prod2-session-head"><div><span>${safe(statusLabel(s.status))}</span><h2>${safe(s.production_goal||'Producción')}</h2><small>${fmtDateTime(s.scheduled_date)} · ${safe(typeLabel(s.production_type))}</small></div><b>${counts.recorded}/${shots.length}</b></div>
+      <div class="prod2-progress"><i style="width:${progress}%"></i></div>
+      ${arr(s.validation_warnings).length?warningHtml(arr(s.validation_warnings)):''}
+      <div class="card"><div class="section-title">Responsables</div><div class="prod2-resp"><span>Grabación: <b>${safe(resp.recording||'—')}</b></span><span>Foto: <b>${safe(resp.photo||'—')}</b></span><span>Edición: <b>${safe(resp.editing||'Pendiente')}</b></span><span>Asistente: <b>${safe(resp.assistant||'—')}</b></span></div><div class="prod2-primary"><button class="mini-btn" onclick="prod2SetSessionStatus('${s.id}','confirmed')">Confirmar</button><button class="mini-btn" onclick="prod2SetSessionStatus('${s.id}','in_production')">Iniciar producción</button></div></div>
+      <div class="prod2-filters">${[['all','Todas'],['pending','Pendientes'],['recorded','Grabadas'],['repeat','Repetir'],['discarded','Descartadas']].map(([k,l])=>`<button class="${P2.filter===k?'active':''}" onclick="prod2Filter('${k}')">${l} · ${counts[k]}</button>`).join('')}</div>
+      <div class="prod2-shotlist">${filtered.length?filtered.map(x=>shotCard(x,filesByShot[x.id]||[])).join(''):'<div class="card"><div class="empty">No hay tomas en este filtro.</div></div>'}</div>
+      <div class="card"><div class="section-title">Resultados vinculados</div><div class="prod2-resp"><span>Contenidos: <b>${content?.length||0}</b></span><span>Publicaciones: <b>${(content||[]).reduce((n,x)=>n+(x.publications?.length||0),0)}</b></span><span>Métricas vinculadas: <b>${metrics.length}</b></span></div>${metrics.length?`<div class="prod2-chiprow">${metrics.slice(0,6).map(x=>`<span>${safe(x.metric_key)}: ${safe(x.metric_value)}</span>`).join('')}</div>`:'<p class="hint">Cuando Resultados guarde métricas vinculadas a esta producción, aparecerán aquí.</p>'}</div>
+      <div class="prod2-sticky"><button class="btn primary" onclick="prod2ShowFinalize('${s.id}')">Finalizar producción</button></div>`;
+  }
+
+  function shotCard(x,files){
+    const st=x.status|| (x.completed?'recorded':'pending');
+    return `<div class="prod2-shot ${st}"><div class="prod2-shot-top"><div><span class="prod2-badge">${safe(prioLabel(x.priority))}</span><h3>${safe(x.subject_name||x.shot_type||'Toma')}</h3><p>${safe(x.description)}</p><small>${safe(x.orientation||'')} · ${safe(x.planned_use||'')} ${x.assignee?'· '+safe(x.assignee):''}</small></div><b>${safe(shotStatusLabel(st))}</b></div>
+      <div class="prod2-shot-actions"><button onclick="prod2SetShotStatus('${x.id}','recorded')">✅ Grabada</button><button onclick="prod2SetShotStatus('${x.id}','repeat')">🔁 Repetir</button><button onclick="prod2SetShotStatus('${x.id}','pending')">⏭ Pendiente</button><button onclick="prod2SetShotStatus('${x.id}','discarded')">🗑 Descartar</button></div>
+      <div class="prod2-files"><label class="mini-btn">📎 Agregar archivo<input type="file" accept="image/*,video/*" multiple onchange="prod2UploadFiles('${x.id}',this.files)" hidden></label>${files.map(f=>`<button class="mini-btn" onclick="prod2OpenMedia('${f.id}')">${safe(f.file_name)}</button>`).join('')}</div></div>`;
+  }
+
+  function finalizeDialogHtml(s){
+    const shots=s.production_shots||[], rec=shots.filter(x=>x.status==='recorded'||x.completed).length, rep=shots.filter(x=>x.status==='repeat').length, pend=shots.filter(x=>x.status==='pending'||(!x.status&&!x.completed)).length, disc=shots.filter(x=>x.status==='discarded').length;
+    return `<div class="prod2-modal"><div class="prod2-modal-card"><h2>Finalizar producción</h2><div class="prod2-stats"><div class="prod2-stat"><span>Planificadas</span><b>${shots.length}</b></div><div class="prod2-stat"><span>Grabadas</span><b>${rec}</b></div><div class="prod2-stat"><span>Repetir</span><b>${rep}</b></div><div class="prod2-stat"><span>Pendientes</span><b>${pend}</b></div></div><p class="hint">Descartadas: ${disc}</p><label class="field-label">Qué hacer con lo pendiente</label><select id="p2Carry"><option value="next">Pasar a próxima producción</option><option value="close">Cerrar sin reprogramar</option></select><div class="prod2-primary"><button class="btn ghost" onclick="prod2CloseModal()">Cancelar</button><button class="btn primary" onclick="prod2Finalize('${s.id}')">Finalizar</button></div></div></div>`;
+  }
+
+  async function renderProductionV2(m){
+    try{
+      await ensureClient();
+      if(!P2.clientId){
+        P2.view='dashboard';
+        m.innerHTML=productionShell(clientChooser()); return;
+      }
+      P2.data=await loadClientData(P2.clientId);
+      let inner='';
+      if(P2.view==='dashboard') inner=dashboardHtml(P2.data);
+      else if(P2.view==='new') inner=newSessionHtml(P2.data);
+      else if(P2.view==='plan') inner=planHtml(P2.data);
+      else if(P2.view==='history') inner=historyHtml(P2.data);
