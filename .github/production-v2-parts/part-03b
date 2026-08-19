@@ -1,0 +1,42 @@
+      else if(P2.view==='material') inner=materialHtml(P2.data);
+      else if(P2.view==='agenda'){
+        const {data,error}=await sb.from('production_sessions').select('id,client_id,scheduled_date,production_goal,status,clients(business_name),production_shots(id,status)').not('scheduled_date','is',null).order('scheduled_date',{ascending:true}).limit(100); if(error) throw error; inner=agendaHtml(data||[]);
+      }
+      else if(P2.view==='session') inner=await sessionDetailHtml(P2.currentSessionId);
+      m.innerHTML=productionShell(inner,P2.view==='session'?'🎬 Producción de hoy':'🎬 Producción');
+    }catch(e){ console.error(e); workspaceError(m,e); }
+  }
+
+  window.renderProduction = renderProductionV2;
+
+  window.prod2Go = async view => { P2.view=view; if(view!=='session') P2.currentSessionId=''; if(view==='new'){P2.draftShots=[];P2.tempWarnings=[];} await renderProductionV2(main()); window.scrollTo({top:0,behavior:'smooth'}); };
+  window.prod2SelectClient = async id => { setWorkspaceActiveClient(id); P2.clientId=id; P2.view='dashboard'; await renderProductionV2(main()); };
+  window.prod2AddDraftShot = () => {
+    const desc=$('p2Desc')?.value.trim(); if(!desc) return toast('Describe la toma primero');
+    P2.draftShots.push({subject_name:$('p2Subject')?.value.trim()||null,shot_type:$('p2ShotType')?.value||'Producto',description:desc,orientation:$('p2Orientation')?.value||'9:16',planned_use:$('p2Use')?.value||'Reel',priority:$('p2Priority')?.value||'medium',assignee:$('p2Assignee')?.value.trim()||null,status:'pending',edit_status:'pending_edit',position:P2.draftShots.length});
+    $('p2Desc').value=''; $('p2Subject').value=''; const h=$('p2Draft'); if(h)h.innerHTML=draftShotsHtml();
+  };
+  window.prod2RemoveDraftShot = i => { P2.draftShots.splice(i,1); P2.draftShots.forEach((x,n)=>x.position=n); if($('p2Draft'))$('p2Draft').innerHTML=draftShotsHtml(); };
+  window.prod2PreviewWarnings = () => { if(!P2.data)return; P2.tempWarnings=validateDraft($('p2Date')?.value,P2.data); if($('p2Warnings'))$('p2Warnings').innerHTML=warningHtml(P2.tempWarnings); };
+
+  window.prod2SaveSession = async () => {
+    try{
+      const goal=$('p2Goal')?.value.trim(); if(!goal) throw new Error('Escribe el objetivo de la sesión.');
+      if(!P2.draftShots.length) throw new Error('Agrega al menos una toma.');
+      const scheduled=$('p2Date')?.value; const warnings=validateDraft(scheduled,P2.data);
+      const outputs=qsa('input[name="p2Output"]:checked').map(x=>x.value);
+      const resp={recording:$('p2Recording')?.value.trim()||'',photo:$('p2Photo')?.value.trim()||'',editing:$('p2Editing')?.value.trim()||'',assistant:$('p2Assistant')?.value.trim()||''};
+      const locValue=$('p2Location')?.value; const loc=locValue&&locValue!=='other'?locValue:null;
+      const {data:s,error}=await sb.from('production_sessions').insert({client_id:P2.clientId,location_id:loc,scheduled_date:scheduled?new Date(scheduled).toISOString():null,production_goal:goal,status:$('p2Status')?.value||'planned',notes:$('p2Notes')?.value.trim()||null,production_type:$('p2Type')?.value||'photo_video',desired_outputs:outputs,responsibles:resp,validation_warnings:warnings}).select('id').single(); if(error) throw error;
+      const rows=P2.draftShots.map((x,i)=>({...x,production_session_id:s.id,position:i,completed:false}));
+      const ins=await sb.from('production_shots').insert(rows); if(ins.error) throw ins.error;
+      P2.draftShots=[]; P2.currentSessionId=s.id; P2.view='session'; toast('Producción guardada ✓'); await renderProductionV2(main());
+    }catch(e){ console.error(e); toast('Error: '+(e.message||'no se pudo guardar')); }
+  };
+
+  window.prod2GeneratePlan = async () => {
+    try{
+      const draft=buildAutomaticPlan(P2.data);
+      const old=P2.data.plans.find(x=>x.week_start===draft.week_start&&x.status==='draft');
+      let plan;
+      if(old){ const r=await sb.from('production_plans').update({objective:draft.objective,source_context:draft.source_context,priorities:draft.priorities,updated_at:nowIso()}).eq('id',old.id).select('*').single(); if(r.error)throw r.error; plan=r.data; }
