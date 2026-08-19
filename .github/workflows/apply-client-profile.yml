@@ -1,0 +1,36 @@
+name: Apply client profile navigation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/apply-client-profile.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply client profile navigation
+        run: python scripts/apply-client-profile.py
+      - name: Remove temporary patch files
+        run: |
+          rm -f scripts/apply-client-profile.py
+          rm -f .github/workflows/apply-client-profile.yml
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes needed.'
+            exit 0
+          fi
+          git commit -m 'Open client profile when selected'
+          git push
