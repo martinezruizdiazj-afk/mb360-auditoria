@@ -1,0 +1,85 @@
+/* MB360 · Producción v2 · 2026-08 */
+(() => {
+  const P2 = {
+    view: 'dashboard',
+    clientId: '',
+    data: null,
+    draftShots: [],
+    currentSessionId: '',
+    currentPlan: null,
+    filter: 'all'
+  };
+
+  const $ = id => document.getElementById(id);
+  const qsa = sel => Array.from(document.querySelectorAll(sel));
+  const safe = v => typeof esc === 'function' ? esc(v) : String(v ?? '');
+  const nowIso = () => new Date().toISOString();
+  const dateOnly = d => new Date(d).toISOString().slice(0,10);
+  const dayNames = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const statusLabel = s => ({planned:'Planificada',confirmed:'Confirmada',in_production:'En producción',completed:'Finalizada',delivered_to_editing:'Material a edición',cancelled:'Cancelada'})[s] || s || 'Planificada';
+  const shotStatusLabel = s => ({pending:'Pendiente',recorded:'Grabada',repeat:'Repetir',discarded:'Descartada'})[s] || s || 'Pendiente';
+  const editLabel = s => ({pending_edit:'Pendiente de editar',editing:'En edición',edited:'Editado',do_not_use:'No usar'})[s] || s || 'Pendiente de editar';
+  const prioLabel = p => ({high:'Alta',medium:'Media',low:'Baja'})[p] || p || 'Media';
+  const typeLabel = t => ({photo:'Foto',video:'Video',photo_video:'Foto + video'})[t] || t || 'Foto + video';
+  const fmtDateTime = v => {
+    if(!v) return 'Sin fecha';
+    const d=new Date(v); if(Number.isNaN(d.getTime())) return String(v);
+    return d.toLocaleString('es-US',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+  };
+  const weekStart = (d=new Date()) => {
+    const x=new Date(d); const day=(x.getDay()+6)%7; x.setHours(12,0,0,0); x.setDate(x.getDate()-day); return dateOnly(x);
+  };
+  const arr = v => Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]);
+  const text = v => Array.isArray(v) ? v.join(', ') : (v && typeof v==='object' ? JSON.stringify(v) : String(v||''));
+  const normalize = v => text(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+  function main(){ return $('main'); }
+  function activeClient(){ return clientCache.find(c=>c.id===activeWorkspaceClientId) || null; }
+  function mainLoc(c=activeClient()){ return c ? clientMainLocation(c) : null; }
+
+  async function ensureClient(){
+    await loadClients();
+    if(activeWorkspaceClientId && clientCache.some(c=>c.id===activeWorkspaceClientId)){
+      P2.clientId=activeWorkspaceClientId; return activeWorkspaceClientId;
+    }
+    P2.clientId=''; return '';
+  }
+
+  async function loadClientData(clientId){
+    const empty = {sessions:[], products:[], onboarding:null, slots:[], media:[], plans:[]};
+    if(!clientId) return empty;
+    const [s,p,o,t,m,pl] = await Promise.all([
+      sb.from('production_sessions').select('id,client_id,location_id,scheduled_date,actual_date,production_goal,status,notes,production_type,desired_outputs,responsibles,plan_context,validation_warnings,carryover_policy,finalized_at,created_at,production_shots(id,product_id,subject_name,shot_type,description,orientation,duration_target_seconds,priority,planned_use,completed,completed_at,notes,status,assignee,edit_status,source_shot_id,position,metadata)').eq('client_id',clientId).order('scheduled_date',{ascending:false,nullsFirst:false}).limit(100),
+      sb.from('products').select('id,name,category,sales_level,profitability_level,client_wants_to_push,active,notes').eq('client_id',clientId).eq('active',true).order('client_wants_to_push',{ascending:false}).limit(100),
+      sb.from('onboardings').select('id,onboarding_date,raw_answers,preliminary_priorities').eq('client_id',clientId).order('onboarding_date',{ascending:false}).limit(1),
+      sb.from('business_time_slots').select('id,day_of_week,start_time,end_time,demand_level,available_capacity,notes').eq('client_id',clientId).order('day_of_week').order('start_time'),
+      sb.from('production_media').select('id,production_session_id,production_shot_id,product_id,storage_path,file_name,mime_type,file_size,media_status,edit_status,notes,created_at').eq('client_id',clientId).order('created_at',{ascending:false}).limit(300),
+      sb.from('production_plans').select('id,week_start,objective,source_context,priorities,status,converted_session_id,created_at').eq('client_id',clientId).order('week_start',{ascending:false}).limit(20)
+    ]);
+    const firstErr=[s,p,o,t,m,pl].find(x=>x.error)?.error; if(firstErr) throw firstErr;
+    return {sessions:s.data||[],products:p.data||[],onboarding:o.data?.[0]||null,slots:t.data||[],media:m.data||[],plans:pl.data||[]};
+  }
+
+  function productionShell(inner, title='🎬 Producción', hint='Planifica, ejecuta y organiza el contenido del cliente.'){
+    const c=activeClient(), loc=mainLoc(c);
+    const head=pageHead('Operación',title,hint,'<button class="btn ghost" onclick="openTool(\'home\')">← Inicio</button>');
+    const banner=activeClientBannerMarkup('prod2Active',c?.business_name||'',loc?.address||'','Selecciona un cliente para trabajar en Producción');
+    return head+banner+prodNav()+`<div class="prod2">${inner}</div>`;
+  }
+
+  function prodNav(){
+    const items=[['dashboard','Resumen'],['new','+ Nueva'],['plan','Plan semanal'],['agenda','Agenda'],['history','Historial'],['material','Material']];
+    return `<div class="prod2-tabs">${items.map(([id,l])=>`<button class="${P2.view===id?'active':''}" onclick="prod2Go('${id}')">${l}</button>`).join('')}</div>`;
+  }
+
+  function clientChooser(){
+    return `<div class="card"><div class="section-title">Selecciona el cliente</div><label class="field-label">Cliente</label><select id="prod2Client" onchange="prod2SelectClient(this.value)">${clientOptions(activeWorkspaceClientId)}</select><p class="hint" style="margin-top:10px">La producción quedará siempre vinculada al cliente activo.</p></div>`;
+  }
+
+  function dashboardHtml(d){
+    const now=new Date();
+    const future=d.sessions.filter(s=>s.scheduled_date && new Date(s.scheduled_date)>=now && !['completed','delivered_to_editing','cancelled'].includes(s.status)).sort((a,b)=>new Date(a.scheduled_date)-new Date(b.scheduled_date));
+    const next=future[0];
+    const activeShots=d.sessions.flatMap(s=>(s.production_shots||[]).map(x=>({...x,_session:s}))).filter(x=>['pending','repeat'].includes(x.status|| (x.completed?'recorded':'pending')));
+    const done=d.sessions.filter(s=>['completed','delivered_to_editing'].includes(s.status)).sort((a,b)=>new Date(b.actual_date||b.scheduled_date||b.created_at)-new Date(a.actual_date||a.scheduled_date||a.created_at));
+    const last=done[0];
