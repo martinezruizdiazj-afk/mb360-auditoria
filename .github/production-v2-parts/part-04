@@ -1,0 +1,72 @@
+      else { const r=await sb.from('production_plans').insert({client_id:P2.clientId,...draft,status:'draft'}).select('*').single(); if(r.error)throw r.error; plan=r.data; }
+      P2.currentPlan=plan; P2.data=await loadClientData(P2.clientId); toast('Plan semanal generado ✓'); await renderProductionV2(main());
+    }catch(e){ console.error(e); toast('Error al generar plan'); }
+  };
+
+  window.prod2CreateSessionFromPlan = async id => {
+    try{
+      let plan=P2.currentPlan || P2.data.plans.find(x=>x.id===id) || P2.data.plans[0]; if(!plan) throw new Error('Genera primero un plan.');
+      const priorities=arr(plan.priorities), shots=[];
+      priorities.forEach(p=>arr(p.shots).forEach(x=>shots.push({subject_name:p.subject||null,shot_type:x.shot_type||'Producto',description:x.description||String(x),orientation:x.orientation||'9:16',priority:x.priority||'medium',planned_use:x.planned_use||'Reel',status:'pending',edit_status:'pending_edit',position:shots.length}))); if(!shots.length) throw new Error('El plan no tiene tomas.');
+      const next=new Date(); next.setDate(next.getDate()+1); next.setHours(15,0,0,0);
+      const {data:s,error}=await sb.from('production_sessions').insert({client_id:P2.clientId,location_id:mainLoc()?.id||null,scheduled_date:next.toISOString(),production_goal:plan.objective||'Plan semanal',status:'planned',production_type:'photo_video',desired_outputs:[...new Set(priorities.flatMap(p=>arr(p.outputs)))],plan_context:{production_plan_id:plan.id,source_context:plan.source_context||{}},validation_warnings:validateDraft(next.toISOString().slice(0,16),P2.data)}).select('id').single(); if(error)throw error;
+      const r=await sb.from('production_shots').insert(shots.map(x=>({...x,production_session_id:s.id,completed:false}))); if(r.error)throw r.error;
+      if(plan.id) await sb.from('production_plans').update({status:'converted',converted_session_id:s.id,updated_at:nowIso()}).eq('id',plan.id);
+      P2.currentSessionId=s.id; P2.view='session'; toast('Sesión creada desde el plan ✓'); await renderProductionV2(main());
+    }catch(e){console.error(e);toast('Error: '+(e.message||'no se pudo crear la sesión'));}
+  };
+
+  window.prod2OpenSession = async id => { P2.currentSessionId=id; P2.view='session'; P2.filter='all'; await renderProductionV2(main()); window.scrollTo({top:0,behavior:'smooth'}); };
+  window.prod2OpenAgendaSession = async (clientId,id) => { setWorkspaceActiveClient(clientId); P2.clientId=clientId; P2.currentSessionId=id; P2.view='session'; P2.filter='all'; await renderProductionV2(main()); };
+  window.prod2Filter = async f => { P2.filter=f; await renderProductionV2(main()); };
+
+  window.prod2SetSessionStatus = async (id,status) => {
+    try{ const patch={status,updated_at:nowIso()}; if(status==='in_production') patch.actual_date=nowIso(); const r=await sb.from('production_sessions').update(patch).eq('id',id); if(r.error)throw r.error; toast(status==='in_production'?'Producción iniciada ✓':'Estado actualizado ✓'); await renderProductionV2(main()); }catch(e){toast('No se pudo actualizar');}
+  };
+  window.prod2SetShotStatus = async (id,status) => {
+    try{ const completed=status==='recorded'; const patch={status,completed,completed_at:completed?nowIso():null}; const r=await sb.from('production_shots').update(patch).eq('id',id); if(r.error)throw r.error; await renderProductionV2(main()); }catch(e){console.error(e);toast('No se pudo actualizar la toma');}
+  };
+  window.prod2SetEditStatus = async (id,status) => { const r=await sb.from('production_shots').update({edit_status:status}).eq('id',id); if(r.error)toast('No se pudo actualizar'); else toast('Estado de edición actualizado ✓'); };
+
+  window.prod2UploadFiles = async (shotId,fileList) => {
+    const files=Array.from(fileList||[]); if(!files.length)return;
+    try{
+      const sessionId=P2.currentSessionId; let ok=0;
+      for(const f of files){
+        const clean=(f.name||'archivo').replace(/[^a-zA-Z0-9._-]+/g,'_'); const path=`${P2.clientId}/production/${sessionId}/${shotId}/${Date.now()}-${clean}`;
+        const up=await sb.storage.from('mb360-assets').upload(path,f,{upsert:false,contentType:f.type||undefined}); if(up.error)throw up.error;
+        const row=await sb.from('production_media').insert({client_id:P2.clientId,production_session_id:sessionId,production_shot_id:shotId,storage_path:path,file_name:f.name||clean,mime_type:f.type||null,file_size:f.size||null,media_status:'linked',edit_status:'pending_edit'}); if(row.error)throw row.error; ok++;
+      }
+      toast(`${ok} archivo${ok===1?'':'s'} vinculado${ok===1?'':'s'} ✓`); await renderProductionV2(main());
+    }catch(e){console.error(e);toast('Error al subir archivo: '+(e.message||''));}
+  };
+
+  window.prod2OpenMedia = async id => {
+    try{ const {data,error}=await sb.from('production_media').select('storage_path').eq('id',id).single(); if(error)throw error; const r=await sb.storage.from('mb360-assets').createSignedUrl(data.storage_path,120); if(r.error)throw r.error; window.open(r.data.signedUrl,'_blank'); }catch(e){toast('No se pudo abrir el archivo');}
+  };
+
+  window.prod2ShowFinalize = async id => {
+    try{ const {data,error}=await sb.from('production_sessions').select('id,production_shots(id,status,completed)').eq('id',id).single(); if(error)throw error; document.body.insertAdjacentHTML('beforeend',finalizeDialogHtml(data)); }catch(e){toast('No se pudo preparar el cierre');}
+  };
+  window.prod2CloseModal = () => document.querySelector('.prod2-modal')?.remove();
+  window.prod2Finalize = async id => {
+    try{
+      const carry=$('p2Carry')?.value||'next';
+      const {data:s,error}=await sb.from('production_sessions').select('id,client_id,location_id,scheduled_date,production_goal,production_type,desired_outputs,responsibles,production_shots(id,product_id,subject_name,shot_type,description,orientation,priority,planned_use,status,assignee,edit_status)').eq('id',id).single(); if(error)throw error;
+      const pending=(s.production_shots||[]).filter(x=>['pending','repeat'].includes(x.status)); let nextId=null;
+      if(carry==='next'&&pending.length){ const nextDate=s.scheduled_date?new Date(s.scheduled_date):new Date(); nextDate.setDate(nextDate.getDate()+7); const nr=await sb.from('production_sessions').insert({client_id:s.client_id,location_id:s.location_id,scheduled_date:nextDate.toISOString(),production_goal:`Continuación · ${s.production_goal||'Producción'}`,status:'planned',production_type:s.production_type,desired_outputs:s.desired_outputs,responsibles:s.responsibles,plan_context:{carryover_from_session:id}}).select('id').single(); if(nr.error)throw nr.error; nextId=nr.data.id; const rows=pending.map((x,i)=>({production_session_id:nextId,product_id:x.product_id,subject_name:x.subject_name,shot_type:x.shot_type,description:x.description,orientation:x.orientation,priority:x.priority,planned_use:x.planned_use,status:'pending',assignee:x.assignee,edit_status:'pending_edit',source_shot_id:x.id,position:i,completed:false})); const ir=await sb.from('production_shots').insert(rows); if(ir.error)throw ir.error; }
+      const ur=await sb.from('production_sessions').update({status:'completed',actual_date:nowIso(),finalized_at:nowIso(),carryover_policy:carry,updated_at:nowIso()}).eq('id',id); if(ur.error)throw ur.error;
+      prod2CloseModal(); toast(nextId?'Producción finalizada y pendientes reprogramadas ✓':'Producción finalizada ✓'); P2.view='dashboard';P2.currentSessionId='';await renderProductionV2(main());
+    }catch(e){console.error(e);toast('Error al finalizar: '+(e.message||''));}
+  };
+
+  window.prod2DuplicateSession = async id => {
+    try{
+      const {data:s,error}=await sb.from('production_sessions').select('client_id,location_id,scheduled_date,production_goal,production_type,desired_outputs,responsibles,notes,production_shots(product_id,subject_name,shot_type,description,orientation,priority,planned_use,assignee)').eq('id',id).single(); if(error)throw error;
+      const dt=s.scheduled_date?new Date(s.scheduled_date):new Date(); dt.setDate(dt.getDate()+7);
+      const nr=await sb.from('production_sessions').insert({client_id:s.client_id,location_id:s.location_id,scheduled_date:dt.toISOString(),production_goal:`Copia · ${s.production_goal||'Producción'}`,production_type:s.production_type,desired_outputs:s.desired_outputs,responsibles:s.responsibles,notes:s.notes,status:'planned',plan_context:{duplicated_from_session:id}}).select('id').single(); if(nr.error)throw nr.error;
+      const shots=(s.production_shots||[]).map((x,i)=>({...x,production_session_id:nr.data.id,status:'pending',edit_status:'pending_edit',position:i,completed:false})); if(shots.length){const ir=await sb.from('production_shots').insert(shots);if(ir.error)throw ir.error;}
+      toast('Producción duplicada ✓'); P2.currentSessionId=nr.data.id;P2.view='session';await renderProductionV2(main());
+    }catch(e){console.error(e);toast('No se pudo duplicar');}
+  };
+})();
