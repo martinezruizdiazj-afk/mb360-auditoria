@@ -1,0 +1,40 @@
+name: Install Tasks v2
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.task-v2-trigger'
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          css='<link rel="stylesheet" href="tareas-v2.css?v=task2-1">'
+          js='<script src="tareas-v2.js?v=task2-1"></script>'
+          cm='<link rel="stylesheet" href="produccion-v2.css?v=prod2-1">'
+          jm='<script src="produccion-v2.js?v=prod2-1"></script>'
+          if css not in s:
+              assert cm in s
+              s=s.replace(cm,cm+'\n  '+css,1)
+          if js not in s:
+              assert jm in s
+              s=s.replace(jm,jm+'\n  '+js,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "mb360-bot"
+          git config user.email "actions@users.noreply.github.com"
+          rm -f .task-v2-trigger
+          git rm -f .github/workflows/install-tasks-v2.yml
+          git add index.html
+          git commit -m "Install complete Tasks v2 module"
+          git push
