@@ -1,0 +1,39 @@
+name: Patch Tasks v2 scope
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.task-v2-scope-trigger'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Tasks scope behavior
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tareas-v2.js')
+          s=p.read_text(encoding='utf-8')
+          old="async function loadTasks(){let q=sb.from('tasks').select(taskSelect()).order('created_at',{ascending:false}).limit(500);if(T2.scope==='client'&&T2.clientId)q=q.eq('client_id',T2.clientId);const {data,error}=await q;if(error)throw error;T2.data=data||[];return T2.data;}"
+          new="async function loadTasks(){if(T2.scope==='client'&&!T2.clientId){T2.data=[];return T2.data;}let q=sb.from('tasks').select(taskSelect()).order('created_at',{ascending:false}).limit(500);if(T2.scope==='client'&&T2.clientId)q=q.eq('client_id',T2.clientId);const {data,error}=await q;if(error)throw error;T2.data=data||[];return T2.data;}"
+          assert old in s
+          s=s.replace(old,new,1)
+          old2="async function renderTasksV2(m){m.innerHTML=pageHead('Seguimiento','✅ Tareas','Cargando el centro de trabajo…')+'<div class=\"card loading\">Cargando…</div>';try{await ensureClients();"
+          new2="async function renderTasksV2(m){m.innerHTML=pageHead('Seguimiento','✅ Tareas','Cargando el centro de trabajo…')+'<div class=\"card loading\">Cargando…</div>';try{if(activeWorkspaceClientId)T2.scope='client';await ensureClients();"
+          assert old2 in s
+          s=s.replace(old2,new2,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          node --check tareas-v2.js
+      - name: Commit
+        run: |
+          git config user.name "mb360-bot"
+          git config user.email "actions@users.noreply.github.com"
+          rm -f .task-v2-scope-trigger
+          git rm -f .github/workflows/patch-tasks-v2-scope.yml
+          git add tareas-v2.js
+          git commit -m "Fix Tasks v2 client scope behavior"
+          git push
