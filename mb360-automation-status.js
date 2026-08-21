@@ -28,7 +28,7 @@
     const main = document.getElementById('main');
     if (!main) return;
     if (kind === 'reports') {
-      addNote(main, '<b>⏱️ Programación actual:</b> los borradores vencidos se crean cuando abres <b>Reportes</b>. Aún no existe ejecución 24/7 en segundo plano.');
+      addNote(main, '<b>⏱️ Programación real activa:</b> Supabase revisa cada hora las plantillas vencidas y crea el borrador aunque MB360 esté cerrado. Nunca se envía automáticamente: siempre requiere revisión antes de compartir.');
     } else if (kind === 'production') {
       main.querySelectorAll('.section-title').forEach(x => {
         if ((x.textContent || '').trim() === 'Plan semanal automático') x.textContent = 'Plan semanal asistido';
