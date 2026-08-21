@@ -1,6 +1,7 @@
 /* MB360 audit safety guard: stable client identity + safe legacy rendering. */
 (() => {
   const h=v=>typeof window.esc==='function'?window.esc(v):String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const eventAttr=code=>h(code);
 
   function installAuditSafetyGuard(){
     if(typeof window.ensureCentralRecords!=='function') return;
@@ -59,11 +60,17 @@
       if(fd.t==='money') return `<div class="field"><label class="fl">${label}${sub}</label><div class="money"><input type="number" inputmode="decimal" value="${h(v||'')}" oninput="setD('${key}',this.value)"></div></div>`;
       if(fd.t==='pill'||fd.t==='yn'){
         const opts=fd.t==='yn'?YESNO:fd.o;
-        return `<div class="field"><label class="fl">${label}${sub}</label><div class="pills">${opts.map(o=>`<button class="${pillClass(fd,o,v===o)}" onclick="setD('${key}', D['${key}']===${JSON.stringify(o)}?undefined:${JSON.stringify(o)});render()">${h(o)}</button>`).join('')}</div></div>`;
+        return `<div class="field"><label class="fl">${label}${sub}</label><div class="pills">${opts.map(o=>{
+          const js=`setD(${JSON.stringify(key)},D[${JSON.stringify(key)}]===${JSON.stringify(o)}?undefined:${JSON.stringify(o)});render()`;
+          return `<button class="${pillClass(fd,o,v===o)}" onclick="${eventAttr(js)}">${h(o)}</button>`;
+        }).join('')}</div></div>`;
       }
       if(fd.t==='multi'){
         const arr=Array.isArray(v)?v:[];
-        return `<div class="field"><label class="fl">${label}${sub}</label><div class="pills">${fd.o.map(o=>`<button class="pill ${arr.includes(o)?'sel':''}" onclick='toggleMulti(${JSON.stringify(key)},${JSON.stringify(o)})'>${h(o)}</button>`).join('')}</div></div>`;
+        return `<div class="field"><label class="fl">${label}${sub}</label><div class="pills">${fd.o.map(o=>{
+          const js=`toggleMulti(${JSON.stringify(key)},${JSON.stringify(o)})`;
+          return `<button class="pill ${arr.includes(o)?'sel':''}" onclick="${eventAttr(js)}">${h(o)}</button>`;
+        }).join('')}</div></div>`;
       }
       return '';
     };
