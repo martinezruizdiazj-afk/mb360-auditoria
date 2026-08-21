@@ -37,7 +37,7 @@
     } else if (kind === 'metrics') {
       addNote(main, '<b>📊 Monitoreo real activo:</b> Supabase revisa cada hora caídas y problemas de conversión usando días completos y datos confiables. “Preguntar a Resultados” sigue siendo análisis por reglas JavaScript; todavía no utiliza un LLM externo.');
     } else if (kind === 'tasks') {
-      addNote(main, '<b>🔄 Sincronización actual:</b> las tareas sugeridas desde otras áreas se revisan al abrir/seleccionar el cliente. Las tareas recurrentes sí se crean al completar la tarea anterior.');
+      addNote(main, '<b>🔄 Sincronización real activa:</b> Supabase revisa cada hora Auditoría, Inicio de Cliente, Investigación, Revisión semanal, Producción y alertas críticas de Resultados para crear tareas pendientes aunque MB360 esté cerrado. La apertura del módulo queda como respaldo y no duplica el mismo origen.');
     }
   }
 
