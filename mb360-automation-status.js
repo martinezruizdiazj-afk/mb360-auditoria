@@ -35,7 +35,7 @@
       });
       addNote(main, '<b>🧩 Producción asistida:</b> el plan semanal se genera cuando tocas el botón. Usa reglas y datos guardados; no se ejecuta solo cada semana ni usa una IA externa.');
     } else if (kind === 'metrics') {
-      addNote(main, '<b>📊 Análisis actual:</b> las alertas y “Preguntar a Resultados” se calculan al abrir el módulo con reglas JavaScript. No hay monitoreo 24/7 ni un LLM conectado todavía.');
+      addNote(main, '<b>📊 Monitoreo real activo:</b> Supabase revisa cada hora caídas y problemas de conversión usando días completos y datos confiables. “Preguntar a Resultados” sigue siendo análisis por reglas JavaScript; todavía no utiliza un LLM externo.');
     } else if (kind === 'tasks') {
       addNote(main, '<b>🔄 Sincronización actual:</b> las tareas sugeridas desde otras áreas se revisan al abrir/seleccionar el cliente. Las tareas recurrentes sí se crean al completar la tarea anterior.');
     }
