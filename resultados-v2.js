@@ -55,8 +55,9 @@
   function trendArrow(v){return v==null?'Sin comparación':v>1?`↑ ${pct(v)}`:v<-1?`↓ ${pct(Math.abs(v))}`:`→ ${pct(v)}`;}
 
   async function ensure(){await loadClients();R.clientId=activeWorkspaceClientId&&clientCache.some(c=>c.id===activeWorkspaceClientId)?activeWorkspaceClientId:'';}
+  async function fetchAllMetrics(cid){const pageSize=1000,all=[];for(let from=0;;from+=pageSize){const{data,error}=await sb.from('metrics').select('*').eq('client_id',cid).order('period_end',{ascending:false}).range(from,from+pageSize-1);if(error)return{data:null,error};const rows=data||[];all.push(...rows);if(rows.length<pageSize)break;}return{data:all,error:null};}
   async function loadData(){if(!R.clientId){R.data=null;return null;}const cid=R.clientId;const qs=await Promise.all([
-    sb.from('metrics').select('*').eq('client_id',cid).order('period_end',{ascending:false}).limit(2500),
+    fetchAllMetrics(cid),
     sb.from('metric_targets').select('*').eq('client_id',cid).order('target_date',{ascending:false}),
     sb.from('locations').select('*').eq('client_id',cid).eq('active',true).order('is_primary',{ascending:false}),
     sb.from('products').select('*').eq('client_id',cid).eq('active',true),
