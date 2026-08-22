@@ -197,6 +197,7 @@ body.workspace #ticker,body.workspace #chips{display:none}
   <link rel="stylesheet" href="tareas-v2.css?v=task2-1">
   <link rel="stylesheet" href="resultados-v2.css?v=res2-1">
   <link rel="stylesheet" href="reportes-v2.css?v=rep2-1">
+  <link rel="stylesheet" href="research-v2.css?v=research2-1">
 </head>
 <body>
 
@@ -941,6 +942,7 @@ function renderClientList(query=''){
           <button class="mini-btn ${active?'ok':''}" onclick="selectClientFromList('${c.id}')">${active?'Seleccionado ✓':'Seleccionar'}</button>
           <button class="mini-btn" onclick="openClientWorkspace('${c.id}','audit')">Auditoría</button>
           <button class="mini-btn" onclick="openClientWorkspace('${c.id}','onboarding')">Inicio de cliente</button>
+          <button class="mini-btn" onclick="openClientWorkspace('${c.id}','research')">Investigación</button>
           <button class="mini-btn" onclick="openClientWorkspace('${c.id}','production')">Producción</button>
           <button class="mini-btn" onclick="openClientWorkspace('${c.id}','tasks')">Tareas</button>
           <button class="mini-btn" onclick="openClientWorkspace('${c.id}','metrics')">Resultados</button>
@@ -979,6 +981,7 @@ function openClientProfile(id){
     <div class="card"><div class="section-title">Continuar trabajando</div><div class="record-actions" style="flex-wrap:wrap;gap:9px">
       <button class="mini-btn" onclick="openClientWorkspace('${c.id}','audit')">🔎 Auditoría</button>
       <button class="mini-btn" onclick="openClientWorkspace('${c.id}','onboarding')">🤝 Inicio de cliente</button>
+      <button class="mini-btn" onclick="openClientWorkspace('${c.id}','research')">🧭 Investigación</button>
       <button class="mini-btn" onclick="openClientWorkspace('${c.id}','production')">🎬 Producción</button>
       <button class="mini-btn" onclick="openClientWorkspace('${c.id}','tasks')">✓ Tareas</button>
       <button class="mini-btn" onclick="openClientWorkspace('${c.id}','metrics')">↗ Resultados</button>
@@ -1024,6 +1027,7 @@ async function renderDashboard(m){
       <button class="tool-card" onclick="openTool('clients')"><div class="tool-icon">👥</div><h2>Clientes</h2><p>Ve todos los clientes, busca uno y elígelo antes de abrir cualquier módulo.</p><span class="tool-link">Abrir clientes →</span></button>
       <button class="tool-card" onclick="openSelectedClientAudit()"><div class="tool-icon">🔎</div><h2>Auditoría de campo</h2><p>Detecta fugas de dinero y prepara el diagnóstico comercial.</p><span class="tool-link">Abrir auditoría →</span></button>
       <button class="tool-card" onclick="openTool('onboarding')"><div class="tool-icon">🤝</div><h2>Inicio de cliente</h2><p>Registra objetivos, oferta, audiencia, accesos y prioridades.</p><span class="tool-link">Abrir inicio →</span></button>
+      <button class="tool-card" onclick="openTool('research')"><div class="tool-icon">🧭</div><h2>Investigación</h2><p>Convierte evidencia, competencia, demanda y contexto en prioridades accionables.</p><span class="tool-link">Abrir investigación →</span></button>
       <button class="tool-card" onclick="openTool('production')"><div class="tool-icon">🎬</div><h2>Producción de contenido</h2><p>Planifica sesiones y crea la lista de tomas para grabar.</p><span class="tool-link">Abrir producción →</span></button>
       <button class="tool-card" onclick="openTool('tasks')"><div class="tool-icon">✅</div><h2>Tareas</h2><p>Asigna prioridades, responsables y fechas de entrega.</p><span class="tool-link">Ver tareas →</span></button>
       <button class="tool-card" onclick="openTool('metrics')"><div class="tool-icon">📈</div><h2>Resultados</h2><p>Registra métricas y construye el historial de rendimiento.</p><span class="tool-link">Ver resultados →</span></button>
@@ -1201,5 +1205,6 @@ render();
   <script src="tareas-v2.js?v=task2-1"></script>
   <script src="resultados-v2.js?v=res2-1"></script>
   <script src="reportes-v2.js?v=rep2-1"></script>
+  <script src="research-v2.js?v=research2-1"></script>
 </body>
 </html>
