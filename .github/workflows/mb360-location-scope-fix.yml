@@ -1,0 +1,33 @@
+name: MB360 one-time report location scope fix
+on:
+  push:
+    paths:
+      - '.github/workflows/mb360-location-scope-fix.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply strict location metric scope
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('reportes-v2.js')
+          s = p.read_text(encoding='utf-8')
+          old = "const metricRows=(qs[0].data||[]).filter(x=>!locationId||!x.location_id||x.location_id===locationId);"
+          new = "const metricRows=(qs[0].data||[]).filter(x=>!locationId||x.location_id===locationId);"
+          if old not in s:
+              raise SystemExit('Expected location-scope line not found; refusing to modify anything.')
+          if s.count(old) != 1:
+              raise SystemExit('Expected exactly one location-scope line; refusing to modify anything.')
+          p.write_text(s.replace(old,new), encoding='utf-8')
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reportes-v2.js
+          git diff --cached --quiet && exit 0
+          git commit -m "Scope report metrics strictly by location"
+          git push
