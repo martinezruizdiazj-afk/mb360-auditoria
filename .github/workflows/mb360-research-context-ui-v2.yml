@@ -1,0 +1,39 @@
+name: MB360 one-time Research context refresh UI v2
+on:
+  push:
+    paths:
+      - '.github/workflows/mb360-research-context-ui-v2.yml'
+permissions:
+  contents: write
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wire internal context refresh
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('research-v2.js')
+          s=p.read_text()
+          new_run="""function runHeader(){const r=RS.run;if(!r)return'';const q=r.quality_status||'insufficient';const a=r.approval_status||'not_ready';const ctx=r.context_status||'current';return `<div class=\"card\"><div class=\"rsv2-panel-head\"><div><div class=\"eyebrow\">Investigación activa</div><h2>${escR(r.title||r.research_type||'Investigación')}</h2><div class=\"rsv2-meta\">${fmtRDate(r.started_at)} · ${escR(r.geographic_scope||'Sin área geográfica')} · Estado: ${escR(r.status)}</div></div><div class=\"rsv2-badges\"><span class=\"rsv2-badge ${q==='complete'?'current':q==='warnings'?'high':'critical'}\">Calidad: ${escR(q)}</span><span class=\"rsv2-badge ${a==='approved'?'current':'medium'}\">${escR(a)}</span><span class=\"rsv2-badge ${ctx==='needs_refresh'?'refresh':'current'}\">Contexto: ${ctx==='needs_refresh'?'actualizar':'vigente'}</span></div></div>${ctx==='needs_refresh'?`<div class=\"rsv2-note\">⚠️ Cambiaron datos internos de Auditoría, Onboarding, productos o sistemas desde que se creó esta investigación.${canEdit()?' <button class=\"rsv2-action\" onclick=\"rsv2RefreshContext()\">Actualizar contexto</button>':''}</div>`:''}${tabs()}</div>`;}"""
+          s,n=re.subn(r"function runHeader\(\)\{.*?\n\n  function overview",new_run+"\n\n  function overview",s,count=1,flags=re.S)
+          if n!=1: raise SystemExit(f'runHeader replacements {n}')
+          marker="  async function refreshSource(id,silent=false){"
+          if s.count(marker)!=1: raise SystemExit(f'refreshSource marker count {s.count(marker)}')
+          fn="""  async function refreshContext(){try{const context=await buildContext(activeWorkspaceClientId);const now=new Date().toISOString();const{error}=await sb.from('research_runs').update({context_snapshot:context,context_status:'current',context_last_checked_at:now,context_changed_at:null,updated_at:now}).eq('id',RS.run.id).eq('client_id',activeWorkspaceClientId);if(error)throw error;await sb.from('research_sources').update({freshness_status:'current',updated_at:now}).eq('research_run_id',RS.run.id).eq('client_id',activeWorkspaceClientId).eq('source_type','internal').eq('freshness_status','needs_refresh');await loadResearch(RS.run.id);toast('Contexto interno actualizado ✓');renderResearch(document.getElementById('main'));}catch(e){console.error(e);toast('Error: '+(e.message||'no se pudo actualizar el contexto'));}}\n"""
+          s=s.replace(marker,fn+marker,1)
+          old="window.rsv2OpenSource=openSource;window.rsv2RefreshSource=refreshSource;"
+          new="window.rsv2OpenSource=openSource;window.rsv2RefreshContext=refreshContext;window.rsv2RefreshSource=refreshSource;"
+          if s.count(old)!=1: raise SystemExit(f'global marker count {s.count(old)}')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Commit wiring
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research-v2.js
+          git commit -m "Add internal context refresh warning to Research"
+          git push
