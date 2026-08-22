@@ -58,7 +58,7 @@
     sb.from('result_settings').select('currency').eq('client_id',RP.clientId).limit(1),
     sb.from('reports').select('id,period_end').eq('client_id',RP.clientId).lt('period_end',start).order('period_end',{ascending:false}).limit(1)
   ]);const e=qs.find(x=>x.error)?.error;if(e)throw e;let prevCommitments=[];const prevReport=qs[10].data?.[0];if(prevReport){const pc=await sb.from('report_commitments').select('*').eq('report_id',prevReport.id).order('created_at');if(!pc.error)prevCommitments=pc.data||[];}
-    const metricRows=(qs[0].data||[]).filter(x=>!locationId||!x.location_id||x.location_id===locationId);
+    const metricRows=(qs[0].data||[]).filter(x=>!locationId||x.location_id===locationId);
     return{start,end,prevStart,prevEnd,metrics:metricRows,targets:qs[1].data||[],tasks:qs[2].data||[],campaigns:qs[3].data||[],production:qs[4].data||[],content:qs[5].data||[],activities:qs[6].data||[],attributions:qs[7].data||[],systems:qs[8].data||[],settings:qs[9].data?.[0]||null,prevCommitments,locationId};}
 
   /* Same canonical aggregation policy used by Resultados v2. */
