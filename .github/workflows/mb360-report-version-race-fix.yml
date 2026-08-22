@@ -1,0 +1,31 @@
+name: MB360 one-time report version race fix
+on:
+  push:
+    paths:
+      - '.github/workflows/mb360-report-version-race-fix.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch report version insert
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('reportes-v2.js')
+          s=p.read_text()
+          old="""    const {data:vs}=await sb.from('report_versions').select('version_number').eq('report_id',id).order('version_number',{ascending:false}).limit(1);const version=(vs?.[0]?.version_number||0)+1;const clientView=makeClientView(d);const {error:ve}=await sb.from('report_versions').insert({report_id:id,version_number:version,version_status:payload.status,snapshot:{config:{report_type:d.report_type,language:d.language,detail_level:d.detail_level,branding_mode:d.branding_mode,audience_mode:d.audience_mode,currency:d.currency||'USD'},sections:d.sections,source_snapshot:snapshot,quality_checks:d.quality_checks,comparison_summary:d.comparison_summary,client_view:clientView},change_summary:summary,created_by:'MB360'});if(ve)throw ve;d.status=payload.status;d.data_frozen_at=payload.data_frozen_at||d.data_frozen_at;return id;}"""
+          new="""    const clientView=makeClientView(d);const {error:ve}=await sb.rpc('mb360_insert_report_version',{p_report_id:id,p_version_status:payload.status,p_snapshot:{config:{report_type:d.report_type,language:d.language,detail_level:d.detail_level,branding_mode:d.branding_mode,audience_mode:d.audience_mode,currency:d.currency||'USD'},sections:d.sections,source_snapshot:snapshot,quality_checks:d.quality_checks,comparison_summary:d.comparison_summary,client_view:clientView},p_change_summary:summary,p_created_by:'MB360'});if(ve)throw ve;d.status=payload.status;d.data_frozen_at=payload.data_frozen_at||d.data_frozen_at;return id;}"""
+          if old not in s:
+              raise SystemExit('target snippet not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reportes-v2.js
+          git commit -m "Make report version inserts atomic"
+          git push
