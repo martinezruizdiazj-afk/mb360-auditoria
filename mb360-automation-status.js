@@ -30,10 +30,7 @@
     if (kind === 'reports') {
       addNote(main, '<b>⏱️ Programación real activa:</b> Supabase revisa cada hora las plantillas vencidas y crea el borrador aunque MB360 esté cerrado. Nunca se envía automáticamente: siempre requiere revisión antes de compartir.');
     } else if (kind === 'production') {
-      main.querySelectorAll('.section-title').forEach(x => {
-        if ((x.textContent || '').trim() === 'Plan semanal automático') x.textContent = 'Plan semanal asistido';
-      });
-      addNote(main, '<b>🧩 Producción asistida:</b> el plan semanal se genera cuando tocas el botón. Usa reglas y datos guardados; no se ejecuta solo cada semana ni usa una IA externa.');
+      addNote(main, '<b>🎬 Plan semanal automático activo:</b> Supabase revisa cada hora y, si el cliente tiene información de productos, Inicio de Cliente o tomas pendientes y todavía no existe un plan para la semana, crea un borrador automáticamente. El botón Generar / actualizar plan queda disponible para refrescarlo manualmente. Usa reglas y datos guardados; no utiliza una IA externa.');
     } else if (kind === 'metrics') {
       addNote(main, '<b>📊 Monitoreo real activo:</b> Supabase revisa cada hora caídas y problemas de conversión usando días completos y datos confiables. “Preguntar a Resultados” sigue siendo análisis por reglas JavaScript; todavía no utiliza un LLM externo.');
     } else if (kind === 'tasks') {
